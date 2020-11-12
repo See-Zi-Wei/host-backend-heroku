@@ -4,9 +4,12 @@ const morgan = require('morgan');
 const app = express(); // DO NOT DELETE
 
 const database = require('./database');
+const { json } = require('express');
 
 app.use(morgan('dev'));
 app.use(cors());
+
+// app.use(express.json());
 
 /**
  * =====================================================================
@@ -20,6 +23,7 @@ app.use(cors());
 
 /**
  * JSON Body
+ * 
  */
 
 /**
@@ -36,11 +40,46 @@ app.use(cors());
 
 /**
  * Company: Create Queue
+ * -middle to receive request
+ * -code to handle this request(asume request is valid)
  */
+app.post('/company/queue', function (req, res) {
+    const body = req.body;
+    const company_id = body.company_id;
+    const queue_id = body.queue_id
+    console.log(req.body);
+    //do sql insert statement to insert a row
+    // Promise
+    //     .then(() => {
+    //         //res.status(ok)
+    //         //json(..)
+    //     })
+    //     .catch((e) => {
+    //         //next(e)
+    //     })
+    res.send({company_id,queue_id});
+})
 
 /**
  * Company: Update Queue
  */
+
+app.post('/company/queue', function (req, res) {
+    const body = req.body;
+    const company_id = body.company_id;
+    const queue_id = body.queue_id
+    console.log(req.body);
+    //do sql insert statement to insert a row
+    // Promise
+    //     .then(() => {
+    //         //res.status(ok)
+    //         //json(..)
+    //     })
+    //     .catch((e) => {
+    //         //next(e)
+    //     })
+    res.send({company_id,queue_id});
+})
 
 /**
  * Company: Server Available
