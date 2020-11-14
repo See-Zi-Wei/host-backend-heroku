@@ -77,7 +77,6 @@ function createQueue(company_id, queue_id, callback) {
                 else {
                     const sql = 'SELECT * FROM Queue WHERE queue_id = $1';
                     client.query(sql, [queue_id], function (err, res) {
-                        console.log("Response from Database res: %j", res)
                         client.end();
                         if (err) {
                             console.log(err);

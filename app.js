@@ -44,10 +44,11 @@ app.get('/test', (req, res) => {
 app.post('/reset', (req, res) => {
     database.resetTables()
         .then(function () {
-            res.send("successs")
+            res.send('successs')
         })
         .catch(function (err) {
             if (res.status == 500) res.send(errors.UNEXPECTED_SERVER_ERROR);
+            else res.send('Server error');
         })
 });
 
@@ -92,16 +93,16 @@ app.post('/company/queue', function (req, res) {
         //connect to database
         database.createQueue(company_id, queue_id, function (err, result) {
             if (!err) {
-                console.log("No error,result sent");
+                console.log('No error,result sent');
                 res.status(201).send(result);
             }
             else {
                 // Error code : 23505 (Unique Violation)
                 if (err.code == '23505') {
-                    console.log("QUEUE EXISTS");
+                    console.log('QUEUE EXISTS');
                     res.status(422).send({ error: "Queue Id '" + queue_id + "' already exists", code: 'QUEUE_EXISTS' });
                 } else {
-                    console.log("UNEXPECTED_SERVER_ERROR");
+                    console.log('UNEXPECTED_SERVER_ERROR');
                     res.status(errors.UNEXPECTED_SERVER_ERROR.status).send(errors.UNEXPECTED_SERVER_ERROR.body);
                 }
             }
@@ -143,15 +144,15 @@ app.put('/company/queue/:queue_id', function (req, res) {
             if (!err) {
                 //unknown queue(queue_id not found in database)
                 if (result.length == 0) {
-                    console.log("UNKNOWN QUEUE")
+                    console.log('UNKNOWN QUEUE')
                     res.status(404).send({ error: "Queue Id '" + queue_id + "' Not Found", code: 'UNKNOWN_QUEUE' });
                 } else {
                     //success
-                    console.log("No error,result sent");
+                    console.log('No error,result sent');
                     res.status(200).send(result);
                 }
             } else {
-                console.log("UNEXPECTED_SERVER_ERROR");
+                console.log('UNEXPECTED_SERVER_ERROR');
                 res.status(errors.UNEXPECTED_SERVER_ERROR.status).send(errors.UNEXPECTED_SERVER_ERROR.body);
             }
         });
@@ -192,7 +193,6 @@ app.put('/company/queue/:queue_id', function (req, res) {
 /**
  * ========================== UTILS =========================
  */
-
 /**
  * 404
  */
