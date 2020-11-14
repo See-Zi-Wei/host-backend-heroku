@@ -29,6 +29,22 @@ app.use(cors());
 /**
  * Reset API
  */
+app.get('/test',(req,res) => {
+    database.test(function(err,result){
+        if(err)res.send(err)
+        else res.send(result)
+    })
+})
+app.post('/reset', (req, res) => {
+    database.resetTables()
+    .then(function(){
+        res.send("successs")
+    })
+    .catch(function(err){
+        if(res.status == 500) res.send(errors.SERVER_ERROR);
+        else res.send("Server error");
+    })
+});
 
 /**
  * ========================== COMPANY =========================
@@ -65,7 +81,12 @@ app.use(cors());
 /**
  * ========================== UTILS =========================
  */
-
+const errors = {
+    SERVER_ERROR: {
+        body: { error: 'Unable to establish connection with database'},
+        status: 500,
+    }
+}
 /**
  * 404
  */

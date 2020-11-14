@@ -14,7 +14,7 @@ function resetTables() {
   });
   client.connect();
   console.log('connecting to esql')
-  const sql = `TRUNCATE TABLE Queue;`;
+  const sql = `TRUNCATE TABLE Queue CASCADE;`;
   return new Promise(function(resolve,reject){
     console.log('querrying')
     client.query(sql,function(err, res) {
