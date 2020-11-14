@@ -44,11 +44,11 @@ app.get('/test',(req,res) => {
 app.post('/reset', (req, res) => {
     database.resetTables()
     .then(function(){
-        res.send("Status: " + res.status)
+        res.send('success');
     })
     .catch(function(err){
         if(res.status == 500) res.send(errors.SERVER_ERROR);
-        else res.send("Server error");
+        else res.send('Server error');
     })
 });
 
