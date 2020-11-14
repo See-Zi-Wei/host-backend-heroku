@@ -44,7 +44,7 @@ app.get('/test',(req,res) => {
 app.post('/reset', (req, res) => {
     database.resetTables()
     .then(function(){
-        res.send("successs")
+        res.send("Status: " + res.status)
     })
     .catch(function(err){
         if(res.status == 500) res.send(errors.SERVER_ERROR);
@@ -79,6 +79,10 @@ const errors = {
     },
     OTHER_SERVER_ERROR: {
         body: { error: 'Unknown Internal Server Error', code: '' },
+        status: 500,
+    },
+    SERVER_ERROR: {
+        body: { error: 'Unable to establish connection with database'},
         status: 500,
     },
     //#Queue Id QUEUE12345 Not Found - not sure how to show the exact id
@@ -200,12 +204,6 @@ app.put('/company/queue/:queue_id', function (req, res) {
 /**
  * ========================== UTILS =========================
  */
-const errors = {
-    SERVER_ERROR: {
-        body: { error: 'Unable to establish connection with database'},
-        status: 500,
-    }
-}
 /**
  * 404
  */
