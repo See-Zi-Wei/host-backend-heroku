@@ -144,5 +144,4 @@ module.exports = {
     test,
     createQueue,
     updateQueue,
-    client,
 };
