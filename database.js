@@ -1,6 +1,15 @@
 const { reduceRight } = require('async');
 const { Pool, Client } = require('pg')
 
+const client = new Client({
+    user: 'achjwljb',
+    host: 'john.db.elephantsql.com',//postgres://achjwljb:cQtUDm...@john.db.elephantsql.com:5432/achjwljb
+    database: 'achjwljb',
+    password: 'cQtUDmjqP_i_1jz4IkJ3MnsXw5TrwOQR',
+    port: 5432,
+});
+client.connect();
+
 //#b4 submission, delete the const client inside each function for reusability
 
 function resetTables() {
@@ -52,22 +61,23 @@ function test(callback) {
     });
 }
 
-function createQueue(company_id, queue_id, callback) { 
+function createQueue(company_id, queue_id, callback) {
     const client = new Client({
         user: 'achjwljb',
         host: 'john.db.elephantsql.com',
         database: 'achjwljb',
         password: 'cQtUDmjqP_i_1jz4IkJ3MnsXw5TrwOQR',
         port: 5432,
+
     });
-    client.connect(function(err){ 
+    client.connect(function (err) {
         if (err) {
             console.log(err);
             return callback(err, null);
         }
-        else{
+        else {
             const sql = 'INSERT INTO Queue(queue_id,current_queue_number_id, status, server_available,company_id)VALUES($1,$2,$3,$4,$5)';
-            client.query(sql, [queue_id, 0, '0', '1', company_id], function (err, res) {
+            client.query(sql, [queue_id, 0, '0', '0', company_id], function (err, res) {
                 console.log('query sent');
                 console.log('insert data' + company_id + ' ' + queue_id);
                 if (err) {
@@ -87,7 +97,7 @@ function createQueue(company_id, queue_id, callback) {
                     });
                 }
             });
-        } 
+        }
     });
 }
 
@@ -99,12 +109,12 @@ function updateQueue(status, queue_id, callback) {
         password: 'cQtUDmjqP_i_1jz4IkJ3MnsXw5TrwOQR',
         port: 5432,
     });
-    client.connect(function(err){ 
+    client.connect(function (err) {
         if (err) {
             console.log(err);
-            return callback(err, null); 
+            return callback(err, null);
         }
-        else{
+        else {
             const sql = 'UPDATE Queue SET status = $1 WHERE queue_id = $2';
             console.log('UPDATE Queue SET status =' + status + 'WHERE queue_id=' + queue_id);
             client.query(sql, [status, queue_id], function (err, res) {
@@ -132,6 +142,53 @@ function updateQueue(status, queue_id, callback) {
     });
 }
 
+function serverAvailable(queue_id, callback) {
+    const client = new Client({
+        user: 'achjwljb',
+        host: 'john.db.elephantsql.com',
+        database: 'achjwljb',
+        password: 'cQtUDmjqP_i_1jz4IkJ3MnsXw5TrwOQR',
+        port: 5432,
+    });
+    client.connect(function (err) {
+        if (err) {
+            console.log(err);
+            return callback(err, null);
+        }
+        else {
+            const sql = 'UPDATE Queue SET server_available = $1 WHERE queue_id = $2';
+            console.log('UPDATE Queue SET server_available = $1 WHERE queue_id=' + queue_id);
+            client.query(sql, ['1', queue_id], function (err, res) {
+                console.log("Response from Database 1: %j", res)
+                console.log('query sent');
+                if (err) {
+                    console.log('err here!' + err);
+                    return callback(err, null);
+                }
+                else if (res.rowCount == 0) {
+                    console.log('no such queue in database...');
+                    return callback(null, 'UNKNOWN_QUEUE');
+                }
+                else {
+                    console.log('parsing to select statement...');
+                    const sql = 'SELECT C.customer_id FROM CustomerQueueNumber C, Queue Q where Q.queue_id = $1 and Q.current_queue_number_id = C.id';
+                    client.query(sql, [queue_id], function (err, res) {
+                        console.log("Response from Database 2: %j", res)
+                        client.end();
+                        if (err) {
+                            console.log('err2 here!' + err);
+                            return callback(err, null);
+                        } else {
+                            console.log('result here..' + res.rows);
+                            return callback(null, res.rows);
+                        }
+                    });
+                }
+            });
+        }
+    });
+}
+
 function closeDatabaseConnections() {
     /**
      * return a promise that resolves when all connection to the database is successfully closed, and rejects if there was any error.
@@ -144,5 +201,5 @@ module.exports = {
     test,
     createQueue,
     updateQueue,
-    client,
+    serverAvailable
 };

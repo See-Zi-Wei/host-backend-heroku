@@ -80,9 +80,8 @@ const errors = {
 
 app.post('/company/queue', function (req, res) {
     const company_id = req.body.company_id;
-    var queue_id = req.body.queue_id;
-    //#(consultation)ask cher if this way is the way he want us to do for not case sensitive
-    var queue_id = queue_id.toUpperCase();
+    var queueIdCaseSensitive = req.body.queue_id;
+    var queue_id = queueIdCaseSensitive.toUpperCase();
     console.log('company_id: ' + company_id + 'and queue_id:' + queue_id);
     //JSON validation
     var queueIdValidator = validator.isValid(queue_id, validator.checkQueueId);
@@ -114,9 +113,6 @@ app.post('/company/queue', function (req, res) {
     else if (!check10digits) {
         res.status(errors.INVALID_BODY_COMPANY.status).send(errors.INVALID_BODY_COMPANY.body);
     }//other server error
-    else {
-        res.status(errors.OTHER_SERVER_ERROR.status).send(errors.OTHER_SERVER_ERROR.body);
-    }
 })
 
 /**
@@ -124,9 +120,9 @@ app.post('/company/queue', function (req, res) {
  */
 app.put('/company/queue/:queue_id', function (req, res) {
     var status = req.body.status;
-    var queue_id_CaseSensitive = req.params.queue_id;
+    var queueIdCaseSensitive = req.params.queue_id;
     //#(consultation)ask cher if this way is the way he want us for not case sensitive
-    var queue_id = queue_id_CaseSensitive.toUpperCase();
+    var queue_id = queueIdCaseSensitive.toUpperCase();
     console.log('Status: ' + status + 'and queue:' + queue_id);
     //JSON validation
     var queueIdValidator = validator.isValid(queue_id, validator.checkQueueId);
@@ -165,14 +161,53 @@ app.put('/company/queue/:queue_id', function (req, res) {
     else if (!statusValidator) {
         res.status(errors.INVALID_BODY_STATUS.status).send(errors.INVALID_BODY_STATUS.body);
     }
-    else {
-        res.status(errors.OTHER_SERVER_ERROR.status).send(errors.OTHER_SERVER_ERROR.body);
-    }
 })
 
 /**
  * Company: Server Available
+ * 
+ * Company choose a queue Id, 
+ * update the server available to 1 (Available), 
+ * select the customer ID of the customer of the next queue number if any, 
+ * if don't have then 0 as response
  */
+app.put('/company/server', function (req, res) {
+    var queueIdCaseSensitive = req.body.queue_id;
+    //#(consultation)ask cher if this way is the way he want us for not case sensitive
+    var queue_id = queueIdCaseSensitive.toUpperCase();
+    console.log('and queue ID:' + queue_id);
+    var queueIdValidator = validator.isValid(queue_id, validator.checkQueueId);
+    console.log('Queue Validator: ' + queueIdValidator);
+    if (queueIdValidator) {
+        console.log('Validation success!');
+        //connect to database
+        database.serverAvailable(queue_id, function (err, result) {
+            //if current queue number id=0, means no customer
+            //if there is no such queue_id, return Non-existence Queue Id
+            if (!err) {
+                if (result.length == 0) {
+                    console.log('No customer');
+                    res.status(200).send({ customer_id: 0 });
+                }
+                else if (result == 'UNKNOWN_QUEUE') {
+                    console.log('UNKNOWN QUEUE')
+                    res.status(404).send({ error: "Queue Id '" + queue_id + "' Not Found", code: 'UNKNOWN_QUEUE' });
+                }
+                else {
+                    console.log('No error,result sent');
+                    res.status(200).send(result);
+                }
+            } else {
+                console.log('UNEXPECTED_SERVER_ERROR');
+                res.status(errors.UNEXPECTED_SERVER_ERROR.status).send(errors.UNEXPECTED_SERVER_ERROR.body);
+            }
+        });
+    }
+    //validation failed - queue_id
+    else if (!queueIdValidator) {
+        res.status(errors.INVALID_BODY_QUEUE.status).send(errors.INVALID_BODY_QUEUE.body);
+    }
+})
 
 /**
  * Company: Arrival Rate
