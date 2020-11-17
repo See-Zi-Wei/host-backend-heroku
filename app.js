@@ -82,7 +82,7 @@ app.post('/company/queue', function (req, res) {
     const company_id = req.body.company_id;
     var queue_id = req.body.queue_id;
     //#(consultation)ask cher if this way is the way he want us to do for not case sensitive
-    var queue_id = queue_id.toUpperCase()
+    var queue_id = queue_id.toUpperCase();
     console.log('company_id: ' + company_id + 'and queue_id:' + queue_id);
     //JSON validation
     var queueIdValidator = validator.isValid(queue_id, validator.checkQueueId);
