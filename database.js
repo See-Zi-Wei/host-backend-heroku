@@ -150,6 +150,9 @@ function serverAvailable(queue_id, callback) {
         password: 'cQtUDmjqP_i_1jz4IkJ3MnsXw5TrwOQR',
         port: 5432,
     });
+
+    var selectedResult;
+
     client.connect(function (err) {
         if (err) {
             console.log(err);
@@ -171,17 +174,27 @@ function serverAvailable(queue_id, callback) {
                 }
                 else {
                     console.log('parsing to select statement...');
-                    const sql = 'SELECT C.customer_id FROM CustomerQueueNumber C, Queue Q where Q.queue_id = $1 and Q.current_queue_number_id = C.id';
+                    const sql = 'SELECT C.customer_id FROM CustomerQueueNumber C, Queue Q where q.queue_id = $1 and Q.queue_id = C.queue_id and c.queue_number = q.current_queue_number+1';
                     client.query(sql, [queue_id], function (err, res) {
                         console.log("Response from Database 2: %j", res)
-                        client.end();
                         if (err) {
                             console.log('err2 here!' + err);
                             return callback(err, null);
                         } else {
                             console.log('result here..' + res.rows);
-                            return callback(null, res.rows);
-                        }
+                            selectedResult = res.rows;
+
+                            const sql = 'UPDATE Queue SET current_queue_number = current_queue_number+1 WHERE queue_id = $1';
+                            client.query(sql, [queue_id], function (err, res) {
+                                if (err) {
+                                    console.log('err here!' + err);
+                                    return callback(err, null);
+                                }
+                                else{
+                                    return callback(null, selectedResult);
+                                }
+                        });
+                    }
                     });
                 }
             });
