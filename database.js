@@ -188,8 +188,6 @@ function updateQueue(status, queue_id, callback) {
 
 
 
-
-
 function checkQueue(queue_id,customer_id,callback){
     const client = new Client({
         user: 'achjwljb',
