@@ -1,6 +1,8 @@
 const { reduceRight } = require('async');
 const { Pool, Client } = require('pg')
 
+//#b4 submission, delete the const client inside each function for reusability
+
 function resetTables() {
     /**
      * return a promise that resolves when the database is successfully reset, and rejects if there was any error.
@@ -33,7 +35,6 @@ function getDatabasePool() {
         password: 'cQtUDmjqP_i_1jz4IkJ3MnsXw5TrwOQR',
         port: 5432,
     });
-    pool.connect();
     return pool;
 } 
 
@@ -56,7 +57,7 @@ function test(callback) {
 }
 
 function createQueue(company_id, queue_id, callback) {
-    const pool = getDatabasePool(); 
+    const pool = getDatabasePool()
     pool.connect((err, client, done) => {
         if (err) {
             console.log("Response from Database error: %j",err)
@@ -75,8 +76,7 @@ function createQueue(company_id, queue_id, callback) {
                 else {
                     const sql = 'SELECT * FROM Queue WHERE queue_id = $1';
                     client.query(sql, [queue_id], function (err, res) {
-                        //End Database Connection
-                        done();
+                        client.end();
                         if (err) {
                             console.log(err);
                             return callback(err, null);
@@ -91,7 +91,7 @@ function createQueue(company_id, queue_id, callback) {
 }
 
 function updateQueue(status, queue_id, callback) {
-    const pool = getDatabasePool(); 
+    const pool = getDatabasePool()
     pool.connect((err, client, done) => {
         if (err) {
             console.log(err);
@@ -111,7 +111,7 @@ function updateQueue(status, queue_id, callback) {
                     const sql = 'SELECT queue_id FROM Queue WHERE queue_id = $1';
                     client.query(sql, [queue_id], function (err, res) {
                         // console.log("Response from Database res: %j",res) 
-                        done();
+                        client.end();
                         if (err) {
                             console.log(err);
                             return callback(err, null);
@@ -126,17 +126,9 @@ function updateQueue(status, queue_id, callback) {
 }
 
 function serverAvailable(queue_id, callback) {
-    const client = new Client({
-        user: 'achjwljb',
-        host: 'john.db.elephantsql.com',
-        database: 'achjwljb',
-        password: 'cQtUDmjqP_i_1jz4IkJ3MnsXw5TrwOQR',
-        port: 5432,
-    });
-
     var selectedResult;
-
-    client.connect(function (err) {
+    const pool = getDatabasePool()
+    pool.connect((err, client, done) => {
         if (err) {
             console.log(err);
             return callback(err, null);
