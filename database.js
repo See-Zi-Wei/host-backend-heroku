@@ -1,17 +1,6 @@
 const { reduceRight } = require('async');
 const { Pool, Client } = require('pg')
 
-const client = new Client({
-    user: 'achjwljb',
-    host: 'john.db.elephantsql.com',//postgres://achjwljb:cQtUDm...@john.db.elephantsql.com:5432/achjwljb
-    database: 'achjwljb',
-    password: 'cQtUDmjqP_i_1jz4IkJ3MnsXw5TrwOQR',
-    port: 5432,
-});
-client.connect();
-
-//#b4 submission, delete the const client inside each function for reusability
-
 function resetTables() {
     /**
      * return a promise that resolves when the database is successfully reset, and rejects if there was any error.
@@ -36,18 +25,23 @@ function resetTables() {
     });
 }
 
-function test(callback) {
-    /**
-     * return a promise that resolves when the database is successfully reset, and rejects if there was any error.
-     */
-    const client = new Client({
+function getDatabasePool() {
+    const pool = new Pool({
         user: 'achjwljb',
         host: 'john.db.elephantsql.com',//postgres://achjwljb:cQtUDm...@john.db.elephantsql.com:5432/achjwljb
         database: 'achjwljb',
         password: 'cQtUDmjqP_i_1jz4IkJ3MnsXw5TrwOQR',
         port: 5432,
     });
-    client.connect();
+    pool.connect();
+    return pool;
+} 
+
+function test(callback) {
+    /**
+     * return a promise that resolves when the database is successfully reset, and rejects if there was any error.
+     */
+    // const pool = getDatabasePool(); 
     console.log('connecting to esql')
     const sql = `Select * From Queue`;
     client.query(sql, function (err, res) {
@@ -62,21 +56,15 @@ function test(callback) {
 }
 
 function createQueue(company_id, queue_id, callback) {
-    const client = new Client({
-        user: 'achjwljb',
-        host: 'john.db.elephantsql.com',
-        database: 'achjwljb',
-        password: 'cQtUDmjqP_i_1jz4IkJ3MnsXw5TrwOQR',
-        port: 5432,
-
-    });
-    client.connect(function (err) {
+    const pool = getDatabasePool(); 
+    pool.connect((err, client, done) => {
         if (err) {
-            console.log(err);
+            console.log("Response from Database error: %j",err)
+            console.log("err here..."+err);
             return callback(err, null);
         }
         else {
-            const sql = 'INSERT INTO Queue(queue_id,current_queue_number_id, status, server_available,company_id)VALUES($1,$2,$3,$4,$5)';
+            const sql = 'INSERT INTO Queue(queue_id,current_queue_number, status, server_available,company_id)VALUES($1,$2,$3,$4,$5)';
             client.query(sql, [queue_id, 0, '0', '0', company_id], function (err, res) {
                 console.log('query sent');
                 console.log('insert data' + company_id + ' ' + queue_id);
@@ -87,7 +75,8 @@ function createQueue(company_id, queue_id, callback) {
                 else {
                     const sql = 'SELECT * FROM Queue WHERE queue_id = $1';
                     client.query(sql, [queue_id], function (err, res) {
-                        client.end();
+                        //End Database Connection
+                        done();
                         if (err) {
                             console.log(err);
                             return callback(err, null);
@@ -102,14 +91,8 @@ function createQueue(company_id, queue_id, callback) {
 }
 
 function updateQueue(status, queue_id, callback) {
-    const client = new Client({
-        user: 'achjwljb',
-        host: 'john.db.elephantsql.com',
-        database: 'achjwljb',
-        password: 'cQtUDmjqP_i_1jz4IkJ3MnsXw5TrwOQR',
-        port: 5432,
-    });
-    client.connect(function (err) {
+    const pool = getDatabasePool(); 
+    pool.connect((err, client, done) => {
         if (err) {
             console.log(err);
             return callback(err, null);
@@ -128,7 +111,7 @@ function updateQueue(status, queue_id, callback) {
                     const sql = 'SELECT queue_id FROM Queue WHERE queue_id = $1';
                     client.query(sql, [queue_id], function (err, res) {
                         // console.log("Response from Database res: %j",res) 
-                        client.end();
+                        done();
                         if (err) {
                             console.log(err);
                             return callback(err, null);
@@ -164,6 +147,7 @@ function serverAvailable(queue_id, callback) {
             client.query(sql, ['1', queue_id], function (err, res) {
                 console.log("Response from Database 1: %j", res)
                 console.log('query sent');
+                // throw Error('Something bad has happened');
                 if (err) {
                     console.log('err here!' + err);
                     return callback(err, null);
