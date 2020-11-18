@@ -132,6 +132,134 @@ function updateQueue(status, queue_id, callback) {
     });
 }
 
+function checkQueue(queue_id,customer_id,callback){
+    const client = new Client({
+        user: 'achjwljb',
+        host: 'john.db.elephantsql.com',
+        database: 'achjwljb',
+        password: 'cQtUDmjqP_i_1jz4IkJ3MnsXw5TrwOQR',
+        port: 5432,
+    });
+    client.connect(function(err){
+        if(err) {
+            console.log(err);
+            return callback(err,null);
+        }
+        else{
+            const sql= 'Select count(queue_number) total FROM CustomerQueueNumber WHERE queue_id=$1';
+            client.query(sql, [queue_id], function (err, res) {
+                if (err) {
+                    console.log(err);
+                    return callback(err, null);
+                } else {
+                    const r1=res.rows[0];
+                    const sql= 'Select current_queue_number,status FROM Queue WHERE queue_id=$1';
+                    client.query(sql,[queue_id], function(err,res) {
+                        if(err){
+                            console.log(err);
+                            return callback(err,null);
+                        }else{
+                            const r2 = res.rows[0];
+                            const result= Object.assign(r1,r2);
+                            if(customer_id==undefined){
+                                console.log(result)
+                                client.end()
+                                return callback(null,result);
+                            }
+                            else{
+                                const sql= 'Select queue_number FROM CustomerQueueNumber WHERE queue_id=$1 AND customer_id=$2';
+                                client.query(sql,[queue_id,customer_id], function(err,res) {
+                                client.end();
+                                    if(err){
+                                        console.log(err);
+                                        return callback(err,null);
+                                    } else{
+                                        const r3 = res.rows[0];
+                                        result2= Object.assign(result,r3);
+                                        console.log(result2);
+                                        return callback(null,result);
+                                    }
+                                });
+                            }
+                        }
+                    });
+                }
+            });
+        }
+    });
+}
+
+function joinQueue(customer_id, queue_id, callback) { 
+    const client = new Client({
+        user: 'achjwljb',
+        host: 'john.db.elephantsql.com',
+        database: 'achjwljb',
+        password: 'cQtUDmjqP_i_1jz4IkJ3MnsXw5TrwOQR',
+        port: 5432,
+    });
+    client.connect(function(err){ 
+        if (err) {
+            console.log(err);
+            return callback(err, null);
+        }
+        else{
+            // check if queue is active or not
+            const sql = 'SELECT status FROM Queue WHERE queue_id=$1';
+            client.query(sql, [queue_id], function (err, res) {
+                if (err) {
+                    console.log(err);
+                    return callback(err, null);
+                }
+                else {
+                    console.log(res.rows)
+                    //queue does exist
+                    if(res.rows != ''){
+                        //queue active
+                        if(res.rows[0].status == true){
+                            //check if customer already joined queue
+                            const sql= 'SELECT queue_number FROM CustomerQueueNumber WHERE queue_id=$1 AND customer_id=$2'//INSERT INTO CustomerQueueNumber(queue_number) VALUES (MAX(queue_number)+1) WHERE
+                            client.query(sql,[queue_id,customer_id], function(err,res){
+                                console.log('test'+res.rows +'test')
+                                if(err){
+                                    console.log(err);
+                                    return callback(err,null);
+                                }
+                                //if customer not in queue
+                                else if (res.rows == ''){
+                                    console.log('customer not in queue '+res.rows)
+                                    const sql= 'INSERT INTO CustomerQueueNumber(queue_number,customer_id) VALUES (MAX(queue_number)+1,$1) WHERE queue_id=$2';
+                                    client.query(sql,[customer_id,queue_id], function(err,res){
+                                        if(err){
+                                            console.log(err);
+                                            return callback(err,null);
+                                        }
+                                        else{
+                                            console.log('Success');
+                                            return callback(null,'SUCCESS');
+                                        }
+                                    });
+                                }
+                                else{
+                                    console.log('Customer already in queue');
+                                    return callback(null,'EXIST');
+                                }
+                            });
+                        }
+                        else if (res.rows[0].status == false){
+                            // queue inactive return false
+                            console.log('Inactive queue');
+                            return callback(null,false);
+                        }
+                    }
+                    else{
+                        return callback(null,'NOEXSIT')
+                    }
+                }
+            });
+        } 
+    });
+}
+
 function closeDatabaseConnections() {
     /**
      * return a promise that resolves when all connection to the database is successfully closed, and rejects if there was any error.
@@ -144,4 +272,6 @@ module.exports = {
     test,
     createQueue,
     updateQueue,
+    checkQueue,
+    joinQueue,
 };
