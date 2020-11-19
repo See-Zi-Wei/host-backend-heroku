@@ -2,6 +2,7 @@ const { app, tearDown } = require('../app');
 const supertest = require('supertest');
 const request = supertest(app);
 
+jest.setTimeout(100000);
 beforeAll(async function () {
     await request.post('/reset');
 });

@@ -42,14 +42,16 @@ app.get('/test', (req, res) => {
     })
 })
 app.post('/reset', (req, res) => {
-    database.resetTables()
-        .then(function () {
+    database.resetTables(function(err, result){
+        if (!err) {
+            console.log("Successfully reset")
             res.send('successs')
-        })
-        .catch(function (err) {
+        }
+        else {
             if (res.status == 500) res.send(errors.UNEXPECTED_SERVER_ERROR);
             else res.send('Server error');
-        })
+        }
+    })
 });
 
 /**
