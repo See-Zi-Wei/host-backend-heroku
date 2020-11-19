@@ -16,7 +16,8 @@ function resetTables() {
     });
     client.connect();
     console.log('connecting to esql');
-    const sql = `TRUNCATE TABLE Queue CASCADE;`;
+    const sql = `DELETE FROM TABLE Queue;`;
+    client.end();
     return new Promise(function (resolve, reject) {
         console.log('querrying')
         client.query(sql, function (err, res) {
@@ -181,6 +182,126 @@ function serverAvailable(queue_id, callback) {
     });
 }
 
+function checkQueue(queue_id,customer_id,callback){
+    const pool = getDatabasePool();
+    pool.connect((err, client, release)=>{
+        if(err) {
+            console.log(err);
+            return callback(err,null);
+        }
+        else{
+            const sql= 'Select count(queue_number) total FROM CustomerQueueNumber WHERE queue_id=$1';
+            client.query(sql, [queue_id], function (err, res) {
+                pool.end();
+                if (err) {
+                    console.log(err);
+                    return callback(err, null);
+                } else {
+                    const r1=res.rows[0];
+                    const sql= 'Select current_queue_number,status FROM Queue WHERE queue_id=$1';
+                    client.query(sql,[queue_id], function(err,res) {
+                        client.end()
+                        if(err){
+                            console.log(err);
+                            return callback(err,null);
+                        }else{
+                            const r2 = res.rows[0];
+                            const result= Object.assign(r1,r2);
+                            if(customer_id==undefined){
+                                console.log(result)
+                                return callback(null,result);
+                            }
+                            else{
+                                const sql= 'Select queue_number FROM CustomerQueueNumber WHERE queue_id=$1 AND customer_id=$2';
+                                client.query(sql,[queue_id,customer_id], function(err,res) {
+                                    client.end();
+                                    if(err){
+                                        console.log(err);
+                                        return callback(err,null);
+                                    } else{
+                                        const r3 = res.rows[0];
+                                        result2= Object.assign(result,r3);
+                                        console.log(result2);
+                                        return callback(null,result);
+                                    }
+                                });
+                            }
+                        }
+                    });
+                }
+            });
+        }
+    });
+}
+
+function joinQueue(customer_id, queue_id, callback) { 
+    const pool = getDatabasePool();
+    pool.connect((err,client,done)=>{ 
+        if (err) {
+            console.log(err);
+            return callback(err, null);
+        }
+        else{
+            // check if queue is active or not
+            const sql = 'SELECT status FROM Queue WHERE queue_id=$1';
+            client.query(sql, [queue_id], function (err, res) {
+                if (err) {
+                    console.log(err);
+                    return callback(err, null);
+                }
+                else {
+                    console.log(res.rows)
+                    //queue does exist
+                    if(res.rows != ''){
+                        //queue active
+                        if(res.rows[0].status == true){
+                            //check if customer already joined queue
+                            const sql= 'SELECT queue_number FROM CustomerQueueNumber WHERE queue_id=$1 AND customer_id=$2'//INSERT INTO CustomerQueueNumber(queue_number) VALUES (MAX(queue_number)+1) WHERE
+                            client.query(sql,[queue_id,customer_id], function(err,res){
+                                console.log('test'+res.rows +'test')
+                                if(err){
+                                    console.log(err);
+                                    return callback(err,null);
+                                }
+                                //if customer not in queue
+                                else if (res.rows == ''){
+                                    console.log('customer not in queue '+res.rows)
+                                    const sql= 'INSERT INTO CustomerQueueNumber(queue_number,customer_id) VALUES (MAX(queue_number)+1,$1) WHERE queue_id=$2';
+                                    client.query(sql,[customer_id,queue_id], function(err,res){
+                                        done();
+                                        if(err){
+                                            console.log(err);
+                                            return callback(err,null);
+                                        }
+                                        else{
+                                            console.log('Success');
+                                            return callback(null,'SUCCESS');
+                                        }
+                                    });
+                                }
+                                else{
+                                    done();
+                                    console.log('Customer already in queue');
+                                    return callback(null,'EXIST');
+                                }
+                            });
+                        }
+                        else if (res.rows[0].status == false){
+                            // queue inactive return false
+                            console.log('Inactive queue');
+                            return callback(null,false);
+                        }
+                    }
+                    else{
+                        done();
+                        return callback(null,'NOEXSIT')
+                    }
+                }
+            });
+        } 
+    });
+}
+
 function closeDatabaseConnections() {
     /**
      * return a promise that resolves when all connection to the database is successfully closed, and rejects if there was any error.
@@ -193,5 +314,7 @@ module.exports = {
     test,
     createQueue,
     updateQueue,
-    serverAvailable
+    serverAvailable,
+    checkQueue,
+    joinQueue,
 };
