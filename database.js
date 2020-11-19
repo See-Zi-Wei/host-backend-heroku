@@ -26,17 +26,20 @@ function resetTables() {
         });
     });
 }
-
+const pool = new Pool({
+    user: 'achjwljb',
+    host: 'john.db.elephantsql.com',//postgres://achjwljb:cQtUDm...@john.db.elephantsql.com:5432/achjwljb
+    database: 'achjwljb',
+    password: 'cQtUDmjqP_i_1jz4IkJ3MnsXw5TrwOQR',
+    port: 5432,
+});
+pool.on('error', (err, client) => {
+    console.error('Unexpected error on idle client', err)
+    process.exit(-1)
+})
 function getDatabasePool() {
-    const pool = new Pool({
-        user: 'achjwljb',
-        host: 'john.db.elephantsql.com',//postgres://achjwljb:cQtUDm...@john.db.elephantsql.com:5432/achjwljb
-        database: 'achjwljb',
-        password: 'cQtUDmjqP_i_1jz4IkJ3MnsXw5TrwOQR',
-        port: 5432,
-    });
     return pool;
-} 
+}
 
 function test(callback) {
     /**
@@ -60,8 +63,8 @@ function createQueue(company_id, queue_id, callback) {
     const pool = getDatabasePool()
     pool.connect((err, client, done) => {
         if (err) {
-            console.log("Response from Database error: %j",err)
-            console.log("err here..."+err);
+            console.log("Response from Database error: %j", err)
+            console.log("err here..." + err);
             return callback(err, null);
         }
         else {
@@ -166,11 +169,11 @@ function serverAvailable(queue_id, callback) {
                                     console.log('err here!' + err);
                                     return callback(err, null);
                                 }
-                                else{
+                                else {
                                     return callback(null, selectedResult);
                                 }
-                        });
-                    }
+                            });
+                        }
                     });
                 }
             });

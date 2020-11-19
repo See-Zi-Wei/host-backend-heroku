@@ -68,6 +68,10 @@ const errors = {
         body: { error: 'Queue Id should be 10-character alphanumeric string', code: 'INVALID_JSON_BODY' },
         status: 400,
     },
+    INVALID_QUERY_QUEUE: {
+        body: { error: 'Queue Id should be 10-character alphanumeric string', code: 'INVALID_QUERY_STRING' },
+        status: 400,
+    },
     UNEXPECTED_SERVER_ERROR: {
         body: { error: 'Unable to establish a connection with the database', code: 'UNEXPECTED_ERROR' },
         status: 500,
@@ -121,17 +125,17 @@ app.post('/company/queue', function (req, res) {
 /**
  * Company: Update Queue
  */
-app.put('/company/queue/:queue_id', function (req, res) {
+app.put('/company/queue', function (req, res) {
     var status = req.body.status;
-    var queueIdCaseSensitive = req.params.queue_id;
-    var queue_id = queueIdCaseSensitive.toUpperCase();
-    console.log('Status: ' + status + 'and queue:' + queue_id);
+    var queueIdCaseSensitive = req.query.queue_id;
+    console.log('Status: ' + status + 'and queue:' + queueIdCaseSensitive);
     //JSON validation
-    var queueIdValidator = validator.isValid(queue_id, validator.checkQueueId);
+    var queueIdValidator = validator.isValid(queueIdCaseSensitive, validator.checkQueueId);
     var statusValidator = validator.isValid(status, validator.checkStatus);
     console.log('Queue Validator: ' + queueIdValidator + 'and Status Validator: ' + statusValidator);
     if (queueIdValidator && statusValidator) {
         console.log('Validation success!');
+        var queue_id = queueIdCaseSensitive.toUpperCase();
         if (req.body.status == 'ACTIVATE') {
             status = '1';
         } else {
@@ -157,7 +161,7 @@ app.put('/company/queue/:queue_id', function (req, res) {
     }
     //validation failed - queue_id
     else if (!queueIdValidator) {
-        res.status(errors.INVALID_BODY_QUEUE.status).send(errors.INVALID_BODY_QUEUE.body);
+        res.status(errors.INVALID_QUERY_QUEUE.status).send(errors.INVALID_QUERY_QUEUE.body);
     }
     //validation failed - status 
     else if (!statusValidator) {
@@ -175,12 +179,12 @@ app.put('/company/queue/:queue_id', function (req, res) {
  */
 app.put('/company/server', function (req, res) {
     var queueIdCaseSensitive = req.body.queue_id;
-    var queue_id = queueIdCaseSensitive.toUpperCase();
-    console.log('and queue ID:' + queue_id);
-    var queueIdValidator = validator.isValid(queue_id, validator.checkQueueId);
+    console.log('and queue ID:' + queueIdCaseSensitive);
+    var queueIdValidator = validator.isValid(queueIdCaseSensitive, validator.checkQueueId);
     console.log('Queue Validator: ' + queueIdValidator);
     if (queueIdValidator) {
         console.log('Validation success!');
+        var queue_id = queueIdCaseSensitive.toUpperCase();
         //connect to database
         database.serverAvailable(queue_id, function (err, result) {
             //if current queue number id=0, means no customer
@@ -201,6 +205,7 @@ app.put('/company/server', function (req, res) {
                 }
             } else {
                 console.log('UNEXPECTED_SERVER_ERROR');
+                console.log('error here yoooo' + err);
                 res.status(errors.UNEXPECTED_SERVER_ERROR.status).send(errors.UNEXPECTED_SERVER_ERROR.body);
             }
         });
