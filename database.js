@@ -33,11 +33,8 @@ const pool = new Pool({
     database: 'achjwljb',
     password: 'cQtUDmjqP_i_1jz4IkJ3MnsXw5TrwOQR',
     port: 5432,
+    max: 5,
 });
-pool.on('error', (err, client) => {
-    console.error('Unexpected error on idle client', err)
-    process.exit(-1)
-})
 function getDatabasePool() {
     return pool;
 }
