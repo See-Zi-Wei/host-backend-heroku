@@ -16,7 +16,8 @@ function resetTables() {
     });
     client.connect();
     console.log('connecting to esql');
-    const sql = `TRUNCATE TABLE Queue CASCADE;`;
+    const sql = `DELETE FROM TABLE Queue;`;
+    client.end();
     return new Promise(function (resolve, reject) {
         console.log('querrying')
         client.query(sql, function (err, res) {
@@ -180,7 +181,7 @@ function serverAvailable(queue_id, callback) {
 
 function checkQueue(queue_id,customer_id,callback){
     const pool = getDatabasePool();
-    pool.connect((err, client, done)=>{
+    pool.connect((err, client, release)=>{
         if(err) {
             console.log(err);
             return callback(err,null);
@@ -188,6 +189,7 @@ function checkQueue(queue_id,customer_id,callback){
         else{
             const sql= 'Select count(queue_number) total FROM CustomerQueueNumber WHERE queue_id=$1';
             client.query(sql, [queue_id], function (err, res) {
+                pool.end();
                 if (err) {
                     console.log(err);
                     return callback(err, null);
@@ -195,6 +197,7 @@ function checkQueue(queue_id,customer_id,callback){
                     const r1=res.rows[0];
                     const sql= 'Select current_queue_number,status FROM Queue WHERE queue_id=$1';
                     client.query(sql,[queue_id], function(err,res) {
+                        client.end()
                         if(err){
                             console.log(err);
                             return callback(err,null);
@@ -203,7 +206,6 @@ function checkQueue(queue_id,customer_id,callback){
                             const result= Object.assign(r1,r2);
                             if(customer_id==undefined){
                                 console.log(result)
-                                client.end();
                                 return callback(null,result);
                             }
                             else{
