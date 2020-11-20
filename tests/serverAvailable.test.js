@@ -3,50 +3,50 @@ const supertest = require('supertest');
 const request = supertest(app);
 
 jest.setTimeout(1000000);
-beforeAll(async function () {
-    await request.post('/reset');
-    await request.post('/company/queue').send({
-        company_id: 1234567890,
-        queue_id: 'QUEUE12345',
-    });
-    await request.put('/company/queue?queue_id=QUEUE12345').send({
-        status: 'ACTIVATE',
-    });
-    await request.post('/customer/queue').send({
-        customer_id: 1234567890,
-        queue_id: 'QUEUE12345',
-    });
-    await request.post('/customer/queue').send({
-        customer_id: 1234567891,
-        queue_id: 'QUEUE12345',
-    });
-    await request.post('/customer/queue').send({
-        customer_id: 1234567892,
-        queue_id: 'QUEUE12345',
-    });
-    await request.post('/customer/queue').send({
-        customer_id: 1234567893,
-        queue_id: 'QUEUE12345',
-    });
-    await request.post('/company/queue').send({
-        company_id: 9999999999,
-        queue_id: '0000000000',
-    });
-    await request.put('/company/queue?queue_id=0000000000').send({
-        status: 'ACTIVATE',
-    });
-    await request.post('/company/queue').send({
-        company_id: 9999999999,
-        queue_id: 'zzzzzzzzzz',
-    });
-    await request.put('/company/queue?queue_id=zzzzzzzzzz').send({
-        status: 'ACTIVATE',
-    });
-    await request.post('/company/queue').send({
-        company_id: 9999999999,
-        queue_id: '1111111111',
-    });
-});
+// beforeAll(async function () {
+//     await request.post('/reset');
+//     await request.post('/company/queue').send({
+//         company_id: 1234567890,
+//         queue_id: 'QUEUE12345',
+//     });
+//     await request.put('/company/queue?queue_id=QUEUE12345').send({
+//         status: 'ACTIVATE',
+//     });
+//     await request.post('/customer/queue').send({
+//         customer_id: 1234567890,
+//         queue_id: 'QUEUE12345',
+//     });
+//     await request.post('/customer/queue').send({
+//         customer_id: 1234567891,
+//         queue_id: 'QUEUE12345',
+//     });
+//     await request.post('/customer/queue').send({
+//         customer_id: 1234567892,
+//         queue_id: 'QUEUE12345',
+//     });
+//     await request.post('/customer/queue').send({
+//         customer_id: 1234567893,
+//         queue_id: 'QUEUE12345',
+//     });
+//     await request.post('/company/queue').send({
+//         company_id: 9999999999,
+//         queue_id: '0000000000',
+//     });
+//     await request.put('/company/queue?queue_id=0000000000').send({
+//         status: 'ACTIVATE',
+//     });
+//     await request.post('/company/queue').send({
+//         company_id: 9999999999,
+//         queue_id: 'zzzzzzzzzz',
+//     });
+//     await request.put('/company/queue?queue_id=zzzzzzzzzz').send({
+//         status: 'ACTIVATE',
+//     });
+//     await request.post('/company/queue').send({
+//         company_id: 9999999999,
+//         queue_id: '1111111111',
+//     });
+// });
 
 afterAll(function () {
     tearDown();
