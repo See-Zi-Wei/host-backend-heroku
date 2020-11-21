@@ -41,15 +41,14 @@ app.get('/test', (req, res) => {
         else res.send(result)
     })
 })
-app.post('/reset', (req, res) => {
+app.post('/reset', (req, res, next) => {
     database.resetTables(function (err, result) {
         if (!err) {
-            console.log("Successfully reset")
-            res.send('successs')
+            console.log("Successfully reset");
+            res.send('successs');
         }
         else {
-            if (res.status == 500) res.send(errors.UNEXPECTED_SERVER_ERROR);
-            else res.send('Server error');
+            next({ body: { error: err.message, code: 'UNEXPECTED_ERROR' }, status: 500 });
         }
     })
 });
@@ -70,10 +69,6 @@ const errors = {
     INVALID_QUERY_QUEUE: {
         body: { error: 'Queue Id should be 10-character alphanumeric string', code: 'INVALID_QUERY_STRING' },
         status: 400,
-    },
-    UNEXPECTED_SERVER_ERROR: {
-        body: { error: 'Unable to establish a connection with the database', code: 'UNEXPECTED_ERROR' },
-        status: 500,
     },
     INVALID_BODY_STATUS: {
         body: { error: 'Status must be either ACTIVATE or DEACTIVATE', code: 'INVALID_JSON_BODY' },
