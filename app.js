@@ -248,16 +248,15 @@ app.get('/customer/queue', function (req, res) {
     console.log('Queue Validator: ' + queueIdValidator + ' and customer Validator: ' + customeridvalidator);
     if(queueIdValidator && customeridvalidator){
         database.checkQueue(queue_id,customer_id, function(err,result){
-            var output={total: 0, ahead: '', status: 'INACTIVE'}
+            var output={total: 0, ahead: -1, status: 'INACTIVE'}
             if(!err){
-                output.total = result.total-result.current_queue_number;
+                if(result.total != 0)output.total = result.total-result.current_queue_number;
                 //if customerid provided
                 if (result.status == 1){
                     output.status = 'ACTIVE'
                     if(customer_id !== undefined){
                         //missed queue
                         if (result.queue_number < result.current_queue_number) {
-                            output.ahead = -1;
                             res.status(200).send(output);
                         }
                         // position in queue
@@ -272,13 +271,11 @@ app.get('/customer/queue', function (req, res) {
                         }
                         // never joined
                         else {
-                            output.ahead = -1;
                             res.status(200).send(output);
                         }
                     }
                     //customer id not provided
                     else {
-                        output.ahead = -1;
                         res.status(200).send(output);
                     }
                 }
@@ -287,7 +284,6 @@ app.get('/customer/queue', function (req, res) {
                     if(customer_id !== undefined){
                         //missed queue
                         if (result.queue_number < result.current_queue_number) {
-                            output.ahead = -1;
                             res.status(200).send(output);
                         }
                         // position in queue
@@ -302,13 +298,11 @@ app.get('/customer/queue', function (req, res) {
                         }
                         // never joined
                         else {
-                            output.ahead = -1;
                             res.status(200).send(output);
                         }
                     }
                     //customer id not provided
                     else {
-                        output.ahead = -1;
                         res.status(200).send(output);
                     }
                 }    
