@@ -80,7 +80,6 @@ const errors = {
     }
 };
 
-
 /**
  * ========================== COMPANY =========================
  */
@@ -94,13 +93,11 @@ app.post('/company/queue', function (req, res, next) {
     //JSON validation
     var queueIdValidator = validator.isValid(queueIdCaseSensitive, validator.checkQueueId);
     var check10digits = validator.isValid(company_id, validator.check10digit);
-    console.log('QueueId Validator: ' + queueIdValidator + ' and companyId Validator:' + check10digits);
-    console.log('company_id: ' + company_id + 'and queue_id:' + queue_id);
+    //If pass the JSON validation
     if (queueIdValidator && check10digits) {
-        console.log('Validation success!');
-        //convert to uppercase
+        //Convert to uppercase
         var queue_id = queueIdCaseSensitive.toUpperCase();
-        //connect to database
+        //Connect to database
         database.createQueue(company_id, queue_id, function (err, result) {
             if (!err) {
                 res.status(201).send(result);
@@ -114,12 +111,15 @@ app.post('/company/queue', function (req, res, next) {
                 }
             }
         });
-    }//validation failed - queue_id
+    }//Validation failed - queue_id
     else if (!queueIdValidator) {
         next({ body: errors.INVALID_BODY_QUEUE.body, status: errors.INVALID_BODY_QUEUE.status });
-    }//validation failed - company_id
+    }//Validation failed - company_id
     else if (!check10digits) {
         next({ body: errors.INVALID_BODY_COMPANY.body, status: errors.INVALID_BODY_COMPANY.status });
+    }
+    else {
+        next({ body: { error: err.message, code: 'UNEXPECTED_ERROR' }, status: 500 });
     }
 })
 
@@ -129,44 +129,44 @@ app.post('/company/queue', function (req, res, next) {
 app.put('/company/queue', function (req, res, next) {
     var status = req.body.status;
     var queueIdCaseSensitive = req.query.queue_id;
-    console.log('Status: ' + status + 'and queue:' + queueIdCaseSensitive);
     //JSON validation
     var queueIdValidator = validator.isValid(queueIdCaseSensitive, validator.checkQueueId);
     var statusValidator = validator.isValid(status, validator.checkStatus);
-    console.log('Queue Validator: ' + queueIdValidator + 'and Status Validator: ' + statusValidator);
+    //If pass the JSON validation
     if (queueIdValidator && statusValidator) {
-        console.log('Validation success!');
         var queue_id = queueIdCaseSensitive.toUpperCase();
+        //If the status is 'ACTIVATE', convert into 1
         if (req.body.status == 'ACTIVATE') {
             status = '1';
         } else {
             status = '0';
         }
-        //connect to database
+        //Connect to database
         database.updateQueue(status, queue_id, function (err, result) {
             if (!err) {
-                //unknown queue(queue_id not found in database)
+                //Unknown queue(queue_id not found in database)
                 if (result.length == 0) {
-                    console.log('UNKNOWN QUEUE')
                     next({ body: { error: "Queue Id '" + queue_id + "' Not Found", code: 'UNKNOWN_QUEUE' }, status: 404 });
                 } else {
-                    //success
-                    console.log('No error,result sent');
+                    //Success
                     res.status(200).send(result);
                 }
-            } else {
-                console.log('UNEXPECTED_SERVER_ERROR');
+            }//Unexpected Server Error
+            else {
                 next({ body: { error: err.message, code: 'UNEXPECTED_ERROR' }, status: 500 });
             }
         });
     }
-    //validation failed - queue_id
+    //Validation failed - queue_id
     else if (!queueIdValidator) {
         next({ body: errors.INVALID_QUERY_QUEUE.body, status: errors.INVALID_QUERY_QUEUE.status });
     }
-    //validation failed - status 
+    //Validation failed - status 
     else if (!statusValidator) {
         res.status(errors.INVALID_BODY_STATUS.status).send(errors.INVALID_BODY_STATUS.body);
+    }
+    else {
+        next({ body: { error: err.message, code: 'UNEXPECTED_ERROR' }, status: 500 });
     }
 });
 
@@ -179,39 +179,36 @@ app.put('/company/queue', function (req, res, next) {
  */
 app.put('/company/server', function (req, res, next) {
     var queueIdCaseSensitive = req.body.queue_id;
-    console.log('queue ID:' + queueIdCaseSensitive);
     var queueIdValidator = validator.isValid(queueIdCaseSensitive, validator.checkQueueId);
-    console.log('Queue Validator: ' + queueIdValidator);
     if (queueIdValidator) {
-        console.log('Validation success!');
         var queue_id = queueIdCaseSensitive.toUpperCase();
-        //connect to database
+        //Connect to database
         database.serverAvailable(queue_id, function (err, result) {
-            //if current queue number id=0, means no customer
-            //if there is no such queue_id, return Non-existence Queue Id
             if (!err) {
+                //Success but no customer
                 if (result.length == 0) {
-                    console.log('No customer');
                     res.status(200).send({ customer_id: 0 });
                 }
+                //Non-existence Queue Id
                 else if (result == 'UNKNOWN_QUEUE') {
-                    console.log('UNKNOWN QUEUE')
                     next({ body: { error: "Queue Id '" + queue_id + "' Not Found", code: 'UNKNOWN_QUEUE' }, status: 404 });
                 }
+                //Success 
                 else {
-                    console.log('No error,result sent' + result);
                     res.status(200).send({ customer_id: result });
                 }
-            } else {
-                console.log('UNEXPECTED_SERVER_ERROR');
-                console.log('error here yoooo' + err);
+            } //Unexpected Server Error
+            else {
                 next({ body: { error: err.message, code: 'UNEXPECTED_ERROR' }, status: 500 });
             }
         });
     }
-    //validation failed - queue_id
+    //Validation failed - queue_id
     else if (!queueIdValidator) {
         next({ body: errors.INVALID_BODY_QUEUE.body, status: errors.INVALID_BODY_QUEUE.status });
+    }
+    else {
+        next({ body: { error: err.message, code: 'UNEXPECTED_ERROR' }, status: 500 });
     }
 })
 
@@ -229,7 +226,6 @@ app.put('/company/server', function (req, res, next) {
 app.post('/customer/queue', function (req, res, next) {
     var customer_id = req.body.customer_id;
     var queue_id_CaseSensitive = req.body.queue_id;
-    console.log('Customerid: ' + customer_id + ' and queue: ' + queue_id);
     //JSON validation
     var queueIdValidator = validator.isValid(queue_id_CaseSensitive, validator.checkQueueId);
     var customeridvalidator = validator.isValid(customer_id, validator.check10digit);
@@ -237,9 +233,9 @@ app.post('/customer/queue', function (req, res, next) {
         var queue_id = queue_id_CaseSensitive.toUpperCase();
         database.joinQueue(customer_id, queue_id, function (err, result) {
             if (!err) {
-                //queue is active
+                //Queue is active
                 if (result !== false) {
-                    //customer already in queue
+                    //Customer already in queue
                     if (result == 'EXIST') {
                         next({ body: { error: "Customer '" + customer_id + "' is already in Queue '" + queue_id + "'", code: 'ALREADY_IN_QUEUE' }, status: 404 });
                     }
@@ -250,84 +246,85 @@ app.post('/customer/queue', function (req, res, next) {
                         next({ body: { error: "Queue Id '" + queue_id + "' Not Found", code: 'UNKNOWN_QUEUE' }, status: 404 });
                     }
                 }
-                //queue is inactive
+                //Queue is inactive
                 else if (result == false) {
                     next({ body: { error: "Queue Id '" + queue_id + "' is INACTIVE", code: 'INACTIVE_QUEUE' }, status: 422 });
                 }
+                //Unexpected server error
                 else {
                     next({ body: { error: err.message, code: 'UNEXPECTED_ERROR' }, status: 555 });
                 }
             }
         });
     }
-    //invalid customer id
+    //Invalid customer id
     else if (!customeridvalidator) {
         next({ body: errors.INVALID_BODY_CUSTOMER.body, status: errors.INVALID_BODY_CUSTOMER.status });
     }
-    //invalid queue id
+    //Invalid queue id
     else if (!queueIdValidator) {
         next({ body: errors.INVALID_BODY_QUEUE.body, status: errors.INVALID_BODY_QUEUE.status });
-    } else {
+    }
+    //Unexpected server error
+    else {
         next({ body: { error: err.message, code: 'UNEXPECTED_ERROR' }, status: 500 });
     }
 });
 /**
  * Customer: Check Queue
  */
-app.get('/customer/queue', function (req, res,next) {
+app.get('/customer/queue', function (req, res, next) {
     var customer_id = req.query.customer_id;
     if (customer_id !== '') customer_id = parseInt(req.query.customer_id)
     else customer_id = undefined;
     var queue_id_CaseSensitive = req.query.queue_id;
-    console.log('Customerid: ' + customer_id + ' and queue: ' + queue_id_CaseSensitive);
     //JSON validation
     var queueIdValidator = validator.isValid(queue_id_CaseSensitive, validator.checkQueueId);
     var customeridvalidator = validator.isValid(customer_id, validator.check10digit);
-    // if customer_id is not provided let validator pass through
+    // If customer_id is not provided let validator pass through
     if (customer_id == undefined) customeridvalidator = true;
-    // console.log('Queue Validator: ' + queueIdValidator + ' and customer Validator: ' + customeridvalidator);
+    // Validation passed
     if (queueIdValidator && customeridvalidator) {
         var queue_id = queue_id_CaseSensitive.toUpperCase();
         database.checkQueue(queue_id, customer_id, function (err, result) {
             var output = { total: 0, ahead: -1, status: 'INACTIVE' }
             if (!err) {
-                //queue active
+                //Queue active
                 console.log(result)
-                if (result.status == true)output.status = 'ACTIVE';
-                // queue id not found/exist
+                if (result.status == true) output.status = 'ACTIVE';
+                // Queue id not found/exist
                 if (result == 'NOEXIST') {
                     next({ body: { error: "Queue Id '" + queue_id + "' Not Found", code: 'UNKNOWN_QUEUE' }, status: 404 });
                 }
-                else{
-                    //total queue number
+                else {
+                    //Total queue number
                     output.total = result.total - result.current_queue_number;
-                    result.current_queue_number=+1;
-                    //missed queue
+                    result.current_queue_number = +1;
+                    //Missed queue
                     if (result.queue_number < result.current_queue_number) {
                         res.status(200).send(output);
                     }
-                    // position in queue
+                    // Position in queue
                     else if (result.queue_number > result.current_queue_number) {
                         output.ahead = result.queue_number - result.current_queue_number;
                         res.status(200).send(output);
                     }
-                    // next to be assigned
+                    // Next to be assigned
                     else if (result.queue_number == result.current_queue_number) {
                         output.ahead = 0;
                         res.status(200).send(output);
                     }
-                    // never joined
+                    // Never joined
                     else if (!result.queue_number) {
                         res.status(200).send(output);
                     }
-                    // queue exist but customer not inside
+                    // Queue exist but customer not inside
                     else {
                         res.status(200).send(output);
                     }
                 }
-
             }
-            else{
+            else {
                 next({ body: { error: err.message, code: 'UNEXPECTED_ERROR' }, status: 500 });
             }
         });
@@ -339,7 +336,8 @@ app.get('/customer/queue', function (req, res,next) {
     //invalid queue id
     else if (!queueIdValidator) {
         next({ body: errors.INVALID_QUERY_QUEUE.body, status: errors.INVALID_QUERY_QUEUE.status });
-    } else {
+    }
+    else {
         next({ body: { error: err.message, code: 'UNEXPECTED_ERROR' }, status: 500 });
     }
 });
@@ -355,8 +353,6 @@ app.get('/customer/queue', function (req, res,next) {
  * Error Handler
  */
 app.use(function (err, req, res, next) {
-    console.log('err here:' + err);
-    console.log("unexpected err error: %j", err)
     const status = err.status || 500;
     const body = err.body || {
         error: 'Unknown Error!',

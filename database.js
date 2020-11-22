@@ -1,5 +1,5 @@
 const { reduceRight } = require('async');
-const { Pool, Client } = require('pg')
+const { Pool, Client } = require('pg');
 
 const pool = new Pool({
     user: 'achjwljb',
@@ -47,10 +47,8 @@ function test(callback) {
      * return a promise that resolves when the database is successfully reset, and rejects if there was any error.
      */
     // const pool = getDatabasePool(); 
-    console.log('connecting to esql')
     const sql = `Select * From Queue`;
     client.query(sql, function (err, res) {
-        console.log('query send');
         if (err) {
             return callback(err, null);
         }
@@ -64,17 +62,13 @@ function createQueue(company_id, queue_id, callback) {
     const pool = getDatabasePool();
     const sql = 'INSERT INTO Queue(queue_id,current_queue_number, status, company_id)VALUES($1,$2,$3,$4)';
     pool.query(sql, [queue_id, 0, '0', company_id], function (err, res) {
-        console.log('query sent');
-        console.log('insert data' + company_id + ' ' + queue_id);
         if (err) {
-            console.log('err in createQueue sql statement 1' + err);
             return callback(err, null);
         }
         else {
             const sql = 'SELECT * FROM Queue WHERE queue_id = $1';
             pool.query(sql, [queue_id], function (err, res) {
                 if (err) {
-                    console.log('err in createQueue sql statement 2' + err);
                     return callback(err, null);
                 } else {
                     return callback(null, res.rows);
@@ -87,19 +81,14 @@ function createQueue(company_id, queue_id, callback) {
 function updateQueue(status, queue_id, callback) {
     const pool = getDatabasePool()
     const sql = 'UPDATE Queue SET status = $1 WHERE queue_id = $2';
-    console.log('UPDATE Queue SET status =' + status + 'WHERE queue_id=' + queue_id);
     pool.query(sql, [status, queue_id], function (err, res) {
-        console.log('query sent');
-        // console.log("Response from Database res: %j",res)
         if (err) {
-            console.log('err in updateQueue sql statement 1' + err);
             return callback(err, null);
         }
         else {
             const sql = 'SELECT queue_id FROM Queue WHERE queue_id = $1';
             pool.query(sql, [queue_id], function (err, res) {
                 if (err) {
-                    console.log(err);
                     return callback(err, null);
                 } else {
                     return callback(null, res.rows);
@@ -111,34 +100,25 @@ function updateQueue(status, queue_id, callback) {
 
 function serverAvailable(queue_id, callback) {
     var selectedResult;
-    const pool = getDatabasePool()
-    console.log('parsing to select statement...');
+    const pool = getDatabasePool();
     const sql = 'Select * from queue where queue_id = $1';
-    console.log('sql statement here '+ sql);
     pool.query(sql, [queue_id], function (err, res) {
-        console.log("Response from Database 0: %j", res)
         if (err) {
-            console.log('err in serverAvailable 0' + err);
             return callback(err, null);
         }
-        else if(res.rows.length == 0){
+        else if (res.rows.length == 0) {
             return callback(null, 'UNKNOWN_QUEUE');
         }
         else {
             const sql = 'SELECT C.customer_id FROM CustomerQueueNumber C, Queue Q where q.queue_id = $1 and Q.queue_id = C.queue_id and c.queue_number = q.current_queue_number+1';
-            console.log('sql statement here '+ sql);
             pool.query(sql, [queue_id], function (err, res) {
-                console.log("Response from Database 2: %j", res)
                 if (err) {
-                    console.log('err in serverAvailable 1' + err);
                     return callback(err, null);
                 }
                 else if (res.rowCount == 0) {
-                    console.log('no customers');
                     return callback(null, []);
-                } 
+                }
                 else {
-                    console.log('result here..' + res.rows[0].customer_id);
                     selectedResult = parseInt(res.rows[0].customer_id);
                     const sql = 'UPDATE Queue SET current_queue_number = current_queue_number+1 WHERE queue_id = $1';
                     pool.query(sql, [queue_id], function (err, res) {
@@ -161,11 +141,9 @@ function checkQueue(queue_id, customer_id, callback) {
     const sql = 'Select current_queue_number,status FROM Queue WHERE queue_id=$1';
     pool.query(sql, [queue_id], function (err, res) {
         if (err) {
-            console.log(err);
             return callback(err, null);
         } else {
             if (res.rows == '') {
-                console.log('queue does not exist');
                 return callback(null, 'NOEXIST');
             }
             else {
@@ -173,27 +151,21 @@ function checkQueue(queue_id, customer_id, callback) {
                 const sql = 'Select count(queue_number) total FROM CustomerQueueNumber WHERE queue_id=$1';
                 pool.query(sql, [queue_id], function (err, res) {
                     if (err) {
-                        console.log(err);
                         return callback(err, null);
                     } else {
-                        console.log(res.rows);
                         const r2 = res.rows[0];
                         const result = Object.assign(r1, r2);
                         if (customer_id == undefined) {
-                            console.log(result)
                             return callback(null, result);
                         }
                         else {
                             const sql = 'Select queue_number FROM CustomerQueueNumber WHERE queue_id=$1 AND customer_id=$2';
                             pool.query(sql, [queue_id, customer_id], function (err, res) {
                                 if (err) {
-                                    console.log(err);
                                     return callback(err, null);
                                 } else {
                                     const r3 = res.rows[0];
-                                    console.log(r3);
                                     const result2 = Object.assign(result, r3);
-                                    console.log(result2);
                                     return callback(null, result2);
                                 }
                             });
@@ -211,11 +183,9 @@ function joinQueue(customer_id, queue_id, callback) {
     const sql = 'SELECT status,current_queue_number FROM Queue WHERE queue_id=$1';
     pool.query(sql, [queue_id], function (err, res) {
         if (err) {
-            console.log(err);
             return callback(err, null);
         }
         else {
-            //console.log(res.rows);
             // next queuenumber
             //queue does exist
             if (res.rows != '') {
@@ -224,9 +194,7 @@ function joinQueue(customer_id, queue_id, callback) {
                     //check if customer already joined queue
                     const sql = 'SELECT queue_number FROM CustomerQueueNumber WHERE queue_id=$1 AND customer_id=$2'//INSERT INTO CustomerQueueNumber(queue_number) VALUES (MAX(queue_number)+1) WHERE
                     pool.query(sql, [queue_id, customer_id], function (err, res) {
-                        console.log('test' + res.rows + 'test');
                         if (err) {
-                            console.log(err);
                             return callback(err, null);
                         }
                         //if customer not in queue
@@ -239,15 +207,12 @@ function joinQueue(customer_id, queue_id, callback) {
                                 }
                                 else {
                                     const nextcurrentqueue = res.rows[0].max + 1;
-                                    //console.log('customer not in queue ' + res.rows)
                                     const sql = 'INSERT INTO CustomerQueueNumber(queue_number,customer_id,queue_id) VALUES ($1,$2,$3)';
                                     pool.query(sql, [nextcurrentqueue, customer_id, queue_id], function (err, res) {
                                         if (err) {
-                                            console.log(err);
                                             return callback(err, null);
                                         }
                                         else {
-                                            console.log('Success');
                                             return callback(null, 'SUCCESS');
                                         }
                                     });
@@ -255,19 +220,17 @@ function joinQueue(customer_id, queue_id, callback) {
                             });
                         }
                         else {
-                            console.log('Customer already in queue');
                             return callback(null, 'EXIST');
                         }
                     });
                 }
                 else if (res.rows[0].status == false) {
                     // queue inactive return false
-                    console.log('Inactive queue');
                     return callback(null, false);
                 }
             }
             else {
-                return callback(null, 'NOEXSIT')
+                return callback(null, 'NOEXIST');
             }
         }
     });
