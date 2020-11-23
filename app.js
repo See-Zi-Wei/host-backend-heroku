@@ -5,12 +5,6 @@ const app = express(); // DO NOT DELETE
 
 const database = require('./database');
 const { json } = require('express');
-
-app.use(morgan('dev'));
-app.use(cors());
-
-app.use(express.json());
-
 const validator = require('./jsonValidation');
 const { nextTick } = require('async');
 
@@ -23,10 +17,13 @@ const { nextTick } = require('async');
 /**
  * ========================== SETUP APP =========================
  */
+app.use(morgan('dev'));
+app.use(cors());
 
 /**
  * JSON Body
  */
+app.use(express.json());
 
 /**
  * ========================== RESET API =========================
@@ -35,12 +32,6 @@ const { nextTick } = require('async');
 /**
  * Reset API
  */
-app.get('/test', (req, res) => {
-    database.test(function (err, result) {
-        if (err) res.send(err)
-        else res.send(result)
-    })
-})
 app.post('/reset', (req, res, next) => {
     database.resetTables(function (err, result) {
         if (!err) {
@@ -52,33 +43,6 @@ app.post('/reset', (req, res, next) => {
         }
     })
 });
-
-const errors = {
-    INVALID_BODY_COMPANY: {
-        body: { error: 'Company Id should be 10-digits', code: 'INVALID_JSON_BODY' },
-        status: 400,
-    },
-    INVALID_BODY_CUSTOMER: {
-        body: { error: 'Customer Id should be 10-digits', code: 'INVALID_JSON_BODY' },
-        status: 400,
-    },
-    INVALID_QUERY_CUSTOMER: {
-        body: { error: 'Customer Id should be 10-digits', code: 'INVALID_QUERY_STRING' },
-        status: 400,
-    },
-    INVALID_BODY_QUEUE: {
-        body: { error: 'Queue Id should be 10-character alphanumeric string', code: 'INVALID_JSON_BODY' },
-        status: 400,
-    },
-    INVALID_QUERY_QUEUE: {
-        body: { error: 'Queue Id should be 10-character alphanumeric string', code: 'INVALID_QUERY_STRING' },
-        status: 400,
-    },
-    INVALID_BODY_STATUS: {
-        body: { error: 'Status must be either ACTIVATE or DEACTIVATE', code: 'INVALID_JSON_BODY' },
-        status: 400,
-    }
-};
 
 /**
  * ========================== COMPANY =========================
@@ -348,6 +312,33 @@ app.get('/customer/queue', function (req, res, next) {
 /**
  * 404
  */
+
+const errors = {
+    INVALID_BODY_COMPANY: {
+        body: { error: 'Company Id should be 10-digits', code: 'INVALID_JSON_BODY' },
+        status: 400,
+    },
+    INVALID_BODY_CUSTOMER: {
+        body: { error: 'Customer Id should be 10-digits', code: 'INVALID_JSON_BODY' },
+        status: 400,
+    },
+    INVALID_QUERY_CUSTOMER: {
+        body: { error: 'Customer Id should be 10-digits', code: 'INVALID_QUERY_STRING' },
+        status: 400,
+    },
+    INVALID_BODY_QUEUE: {
+        body: { error: 'Queue Id should be 10-character alphanumeric string', code: 'INVALID_JSON_BODY' },
+        status: 400,
+    },
+    INVALID_QUERY_QUEUE: {
+        body: { error: 'Queue Id should be 10-character alphanumeric string', code: 'INVALID_QUERY_STRING' },
+        status: 400,
+    },
+    INVALID_BODY_STATUS: {
+        body: { error: 'Status must be either ACTIVATE or DEACTIVATE', code: 'INVALID_JSON_BODY' },
+        status: 400,
+    }
+};
 
 /**
  * Error Handler

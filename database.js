@@ -3,13 +3,14 @@ const { Pool, Client } = require('pg');
 
 const pool = new Pool({
     user: 'achjwljb',
-    host: 'john.db.elephantsql.com',//postgres://achjwljb:cQtUDm...@john.db.elephantsql.com:5432/achjwljb
+    host: 'john.db.elephantsql.com',
     database: 'achjwljb',
     password: 'cQtUDmjqP_i_1jz4IkJ3MnsXw5TrwOQR',
     port: 5432,
     max: 5,
     statement_timeout: 10000
 });
+
 pool.connect();
 
 pool.on('error', (err, client) => {
@@ -38,22 +39,6 @@ function resetTables(callback) {
                     return callback(null, res);
                 }
             });
-        }
-    });
-}
-
-function test(callback) {
-    /**
-     * return a promise that resolves when the database is successfully reset, and rejects if there was any error.
-     */
-    // const pool = getDatabasePool(); 
-    const sql = `Select * From Queue`;
-    client.query(sql, function (err, res) {
-        if (err) {
-            return callback(err, null);
-        }
-        else {
-            return callback(null, res.rows);
         }
     });
 }
@@ -241,7 +226,7 @@ function closeDatabaseConnections() {
      * return a promise that resolves when all connection to the database is successfully closed, and rejects if there was any error.
      */
     console.log("Run Teardown")
-    pool.end().then(() => console.log('pool has ended')) //how to know if this part is correct
+    pool.end().then(() => console.log('pool has ended')) //#how to know if this part is correct
 }
 
 module.exports = {
