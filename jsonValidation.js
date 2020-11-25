@@ -16,6 +16,17 @@ const checkStatus = {
     pattern: '^(ACTIVATE|DEACTIVATE)$'
 }
 
+const checktime = {
+    type: 'string',
+    pattern: '^[0-9]{4}-[0-1][0-9]-[0-2][0-9](T|\s)[0-2][0-9]:[0-5][0-9]:[0-6][0-9]([.][0-9]*)?(Z|(([+]|-)?[0-2][0-9]:[0-5][0-9]))$'
+}
+
+const checkduration = {
+    type: 'integer',
+    minimum: 1,
+    maximum: 1440
+}
+
 const jsonschema = require('jsonschema');
 
 function isValid(instance, schema) {
@@ -33,5 +44,7 @@ module.exports = {
     check10digit,
     checkQueueId,
     checkStatus,
+    checktime,
+    checkduration,
     isValid,
 };

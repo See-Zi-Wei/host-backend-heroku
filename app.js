@@ -10,7 +10,7 @@ app.use(morgan('dev'));
 app.use(cors());
 
 app.use(express.json());
-
+const moment = require('moment');
 const validator = require('./jsonValidation');
 const { nextTick } = require('async');
 
@@ -215,6 +215,58 @@ app.put('/company/server', function (req, res, next) {
 /**
  * Company: Arrival Rate
  */
+
+app.get('/company/arrival_rate', function (req, res, next) {
+    var queueIdCaseSensitive = req.query.queue_id;
+    var from = req.query.from;
+    var duration = parseInt(req.query.duration);
+    //JSON validation
+    var queueIdValidator = validator.isValid(queueIdCaseSensitive, validator.checkQueueId);
+    var timeValidator = validator.isValid(from, validator.checktime);
+    var durationvalidator = validator.isValid(duration, validator.checkduration);
+    //If pass the JSON validation
+    if (queueIdValidator&&timeValidator&&durationvalidator) {
+
+        from = moment(from).subtract(8,'hours');
+        from = moment(from).format('YYYY-M-D HH:mm:ss');
+        duration = duration*60;
+        var endtime = moment(from).add(duration,'seconds');
+        endtime = moment(endtime).format('YYYY-M-D HH:mm:ss');
+        //Convert to uppercase
+        var queue_id = queueIdCaseSensitive.toUpperCase();
+        //Connect to database
+        database.arrivalRate(queue_id,from,endtime, function (err, result) {
+            if (!err) {
+                if (result == 'NOEXIST') {
+                    console.log('this')
+                    next({ body: { error: "Queue Id '" + queue_id + "' Not Found", code: 'UNKNOWN_QUEUE' }, status: 404 });
+                }
+                else if(result == 'TIMEERROR'){
+                    console.log('this222')
+                    next({ body: { error: "The arrival rate does not exist ", code: 'UNKOWN_TIME' }, status: 404 });
+                }
+                else {
+                    res.status(200).send(result);
+                }
+            }
+            else{
+                next({ body: { error: err.message, code: 'UNEXPECTED_ERROR' }, status: 500 });
+            }
+        });
+    }//Validation failed - queue_id
+    else if (!queueIdValidator) {
+        next({ body: errors.INVALID_QUERY_QUEUE.body, status: errors.INVALID_QUERY_QUEUE.status });
+    }
+    else if (!timeValidator) {
+        next({ body: { error: "Time format is incorrect", code: 'INVALID_QUERY_STRING' }, status: 400 });
+    }
+    else if (!durationvalidator) {
+        next({ body: { error: "INVALID Duration", code: 'INVALID_QUERY_STRING' }, status: 400 });
+    }
+    else {
+        next({ body: { error: err.message, code: 'UNEXPECTED_ERROR' }, status: 500 });
+    }
+});
 
 /**
  * ========================== CUSTOMER =========================

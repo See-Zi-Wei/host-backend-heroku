@@ -236,6 +236,36 @@ function joinQueue(customer_id, queue_id, callback) {
     });
 }
 
+function arrivalRate(queue_id,from,duration, callback) {
+    const pool = getDatabasePool();
+    const sql = 'SELECT * FROM CustomerQueueNumber WHERE queue_id=$1';
+    pool.query(sql, [queue_id], function (err, res) {
+        if (err) {
+            console.log(err);
+            return callback(err, null);
+        }
+        else if (res.rows !=''){
+            const sql = 'SELECT time_joined as timestamp,count(*) FROM CustomerQueueNumber WHERE queue_id=$1 and time_joined BETWEEN $2 AND $3 GROUP BY time_joined';
+            pool.query(sql, [queue_id, from, duration], function (err, res) {
+                if(err){
+                    console.log(err);
+                    return callback(err, null);
+                }
+                else if(res.rows !=''){
+                    return callback(null,res.rows);
+                }else{
+                    //time range not found
+                    return callback(null,'TIMEERROR');
+                }
+            })
+        }
+        else{
+            //queue id not exist
+            return callback(null,'NOEXIST');
+        }
+    });
+}
+
 function closeDatabaseConnections() {
     /**
      * return a promise that resolves when all connection to the database is successfully closed, and rejects if there was any error.
@@ -253,4 +283,5 @@ module.exports = {
     serverAvailable,
     checkQueue,
     joinQueue,
+    arrivalRate,
 };
