@@ -30,12 +30,9 @@ const checkduration = {
 const jsonschema = require('jsonschema');
 
 function isValid(instance, schema) {
-    // console.log(jsonschema.validate(instance, schema))
     if ((jsonschema.validate(instance, schema).errors.length) == 0) {
-        // console.log("Valid");
         return true;
     } else {
-        // console.log("Not Valid");
         return false;
     }
 }
