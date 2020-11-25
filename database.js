@@ -1,13 +1,14 @@
 const { reduceRight } = require('async');
 const { Pool, Client } = require('pg');
 
+// Connect to ElephantSQL 
 const pool = new Pool({
     user: 'achjwljb',
     host: 'john.db.elephantsql.com',
     database: 'achjwljb',
     password: 'cQtUDmjqP_i_1jz4IkJ3MnsXw5TrwOQR',
     port: 5432,
-    max: 5,
+    max: 4,
     statement_timeout: 10000
 });
 
@@ -21,7 +22,7 @@ pool.on('error', (err, client) => {
 function getDatabasePool() {
     return pool;
 }
-
+// For Reset API
 function resetTables(callback) {
     const pool = getDatabasePool();
     const sql = `DELETE FROM customerqueuenumber;`;
@@ -42,7 +43,7 @@ function resetTables(callback) {
         }
     });
 }
-
+// For Create Queue API
 function createQueue(company_id, queue_id, callback) {
     const pool = getDatabasePool();
     const sql = 'INSERT INTO Queue(queue_id,current_queue_number, status, company_id)VALUES($1,$2,$3,$4)';
@@ -62,7 +63,7 @@ function createQueue(company_id, queue_id, callback) {
         }
     });
 }
-
+// For Update Queue API
 function updateQueue(status, queue_id, callback) {
     const pool = getDatabasePool()
     const sql = 'UPDATE Queue SET status = $1 WHERE queue_id = $2';
@@ -82,7 +83,7 @@ function updateQueue(status, queue_id, callback) {
         }
     });
 }
-
+// For Server Available API
 function serverAvailable(queue_id, callback) {
     var selectedResult;
     const pool = getDatabasePool();
@@ -120,7 +121,7 @@ function serverAvailable(queue_id, callback) {
         }
     });
 }
-
+// For Check Queue API
 function checkQueue(queue_id, customer_id, callback) {
     const pool = getDatabasePool();
     const sql = 'Select current_queue_number,status FROM Queue WHERE queue_id=$1';
@@ -161,7 +162,7 @@ function checkQueue(queue_id, customer_id, callback) {
         }
     });
 }
-
+// For Join Queue API
 function joinQueue(customer_id, queue_id, callback) {
     const pool = getDatabasePool();
     // check if queue is active or not
@@ -220,7 +221,7 @@ function joinQueue(customer_id, queue_id, callback) {
         }
     });
 }
-
+// For Arrival Rate API
 function arrivalRate(queue_id,from,duration, callback) {
     const pool = getDatabasePool();
     const sql = 'SELECT * FROM CustomerQueueNumber WHERE queue_id=$1';

@@ -60,14 +60,14 @@ app.post('/reset', (req, res, next) => {
 app.post('/company/queue', function (req, res, next) {
     const company_id = req.body.company_id;
     var queueIdCaseSensitive = req.body.queue_id;
-    //JSON validation
+    // JSON validation
     var queueIdValidator = validator.isValid(queueIdCaseSensitive, validator.checkQueueId);
     var check10digits = validator.isValid(company_id, validator.check10digit);
-    //If pass the JSON validation
+    // If pass the JSON validation
     if (queueIdValidator && check10digits) {
-        //Convert to uppercase
+        // Convert to uppercase
         var queue_id = queueIdCaseSensitive.toUpperCase();
-        //Connect to database
+        // Connect to database
         database.createQueue(company_id, queue_id, function (err, result) {
             if (!err) {
                 res.status(201).send(result);
@@ -81,10 +81,10 @@ app.post('/company/queue', function (req, res, next) {
                 }
             }
         });
-    }//Validation failed - queue_id
+    }// Validation failed - queue_id
     else if (!queueIdValidator) {
         next({ body: errors.INVALID_BODY_QUEUE.body, status: errors.INVALID_BODY_QUEUE.status });
-    }//Validation failed - company_id
+    }// Validation failed - company_id
     else if (!check10digits) {
         next({ body: errors.INVALID_BODY_COMPANY.body, status: errors.INVALID_BODY_COMPANY.status });
     }
@@ -99,39 +99,39 @@ app.post('/company/queue', function (req, res, next) {
 app.put('/company/queue', function (req, res, next) {
     var status = req.body.status;
     var queueIdCaseSensitive = req.query.queue_id;
-    //JSON validation
+    // JSON validation
     var queueIdValidator = validator.isValid(queueIdCaseSensitive, validator.checkQueueId);
     var statusValidator = validator.isValid(status, validator.checkStatus);
-    //If pass the JSON validation
+    // Validation passed
     if (queueIdValidator && statusValidator) {
         var queue_id = queueIdCaseSensitive.toUpperCase();
-        //If the status is 'ACTIVATE', convert into 1
+        // If the status is 'ACTIVATE', convert into 1
         if (req.body.status == 'ACTIVATE') {
             status = '1';
         } else {
             status = '0';
         }
-        //Connect to database
+        // Connect to database
         database.updateQueue(status, queue_id, function (err, result) {
             if (!err) {
-                //Unknown queue(queue_id not found in database)
+                // Unknown queue(queue_id not found in database)
                 if (result.length == 0) {
                     next({ body: { error: "Queue Id '" + queue_id + "' Not Found", code: 'UNKNOWN_QUEUE' }, status: 404 });
                 } else {
-                    //Success
+                    // Success
                     res.status(200).send(result);
                 }
-            }//Unexpected Server Error
+            }// Unexpected Server Error
             else {
                 next({ body: { error: err.message, code: 'UNEXPECTED_ERROR' }, status: 500 });
             }
         });
     }
-    //Validation failed - queue_id
+    // Validation failed - queue_id
     else if (!queueIdValidator) {
         next({ body: errors.INVALID_QUERY_QUEUE.body, status: errors.INVALID_QUERY_QUEUE.status });
     }
-    //Validation failed - status 
+    // Validation failed - status 
     else if (!statusValidator) {
         res.status(errors.INVALID_BODY_STATUS.status).send(errors.INVALID_BODY_STATUS.body);
     }
@@ -142,41 +142,39 @@ app.put('/company/queue', function (req, res, next) {
 
 /**
  * Company: Server Available
- * 
- * Company choose a queue Id, 
- * select the customer ID of the customer of the next queue number if any, 
- * if don't have then 0 as response
  */
 app.put('/company/server', function (req, res, next) {
     var queueIdCaseSensitive = req.body.queue_id;
+    // JSON Validation
     var queueIdValidator = validator.isValid(queueIdCaseSensitive, validator.checkQueueId);
+    // Validation Passed
     if (queueIdValidator) {
         var queue_id = queueIdCaseSensitive.toUpperCase();
-        //Connect to database
+        // Connect to database
         database.serverAvailable(queue_id, function (err, result) {
             if (!err) {
-                //Success but no customer
+                // Success but no customer
                 if (result.length == 0) {
                     res.status(200).send({ customer_id: 0 });
                 }
-                //Non-existence Queue Id
+                // Non-existence Queue Id
                 else if (result == 'UNKNOWN_QUEUE') {
                     next({ body: { error: "Queue Id '" + queue_id + "' Not Found", code: 'UNKNOWN_QUEUE' }, status: 404 });
                 }
-                //Success 
+                // Success 
                 else {
                     res.status(200).send({ customer_id: result });
                 }
-            } //Unexpected Server Error
+            } // Unexpected Server Error
             else {
                 next({ body: { error: err.message, code: 'UNEXPECTED_ERROR' }, status: 500 });
             }
         });
     }
-    //Validation failed - queue_id
+    // Validation failed - queue_id
     else if (!queueIdValidator) {
         next({ body: errors.INVALID_BODY_QUEUE.body, status: errors.INVALID_BODY_QUEUE.status });
-    }
+    }// Unexpected error
     else {
         next({ body: { error: err.message, code: 'UNEXPECTED_ERROR' }, status: 500 });
     }
@@ -190,48 +188,50 @@ app.get('/company/arrival_rate', function (req, res, next) {
     var queueIdCaseSensitive = req.query.queue_id;
     var from = req.query.from;
     var duration = parseInt(req.query.duration);
-    //JSON validation
+    // JSON validation
     var queueIdValidator = validator.isValid(queueIdCaseSensitive, validator.checkQueueId);
     var timeValidator = moment(from).isValid();
     var durationvalidator = validator.isValid(duration, validator.checkduration);
-    //If pass the JSON validation
-    if (queueIdValidator&&timeValidator&&durationvalidator) {
-        from = moment(from).subtract(8,'hours');
+    // JSON validation passed
+    if (queueIdValidator && timeValidator && durationvalidator) {
+        from = moment(from).subtract(8, 'hours');
         from = moment(from).format('YYYY-M-D HH:mm:ss');
-        duration = duration*60;
-        var endtime = moment(from).add(duration,'seconds');
+        duration = duration * 60;
+        var endtime = moment(from).add(duration, 'seconds');
         endtime = moment(endtime).format('YYYY-M-D HH:mm:ss');
-        //Convert to uppercase
+        // Convert to uppercase
         var queue_id = queueIdCaseSensitive.toUpperCase();
-        //Connect to database
-        database.arrivalRate(queue_id,from,endtime, function (err, result) {
+        // Connect to database
+        database.arrivalRate(queue_id, from, endtime, function (err, result) {
             if (!err) {
+                // Queue Id not found
                 if (result == 'NOEXIST') {
-                    console.log('this')
                     next({ body: { error: "Queue Id '" + queue_id + "' Not Found", code: 'UNKNOWN_QUEUE' }, status: 404 });
                 }
-                else if(result == 'TIMEERROR'){
-                    console.log('this222')
+                // Arrival rate does not exist
+                else if (result == 'TIMEERROR') {
                     next({ body: { error: "The arrival rate does not exist ", code: 'UNKOWN_TIME' }, status: 404 });
                 }
+                // Success
                 else {
                     res.status(200).send(result);
                 }
             }
-            else{
+            // Unexpected error
+            else {
                 next({ body: { error: err.message, code: 'UNEXPECTED_ERROR' }, status: 500 });
             }
         });
-    }//Validation failed - queue_id
+    }// Validation failed - queue_id
     else if (!queueIdValidator) {
         next({ body: errors.INVALID_QUERY_QUEUE.body, status: errors.INVALID_QUERY_QUEUE.status });
-    }
+    }// Validation failed - time validator 
     else if (!timeValidator) {
         next({ body: { error: "Time format is incorrect", code: 'INVALID_QUERY_STRING' }, status: 400 });
-    }
+    }// Duration validator
     else if (!durationvalidator) {
         next({ body: { error: "INVALID Duration", code: 'INVALID_QUERY_STRING' }, status: 400 });
-    }
+    }// Unexpected error
     else {
         next({ body: { error: err.message, code: 'UNEXPECTED_ERROR' }, status: 500 });
     }
@@ -246,47 +246,48 @@ app.get('/company/arrival_rate', function (req, res, next) {
  */
 app.post('/customer/queue', function (req, res, next) {
     var customer_id = req.body.customer_id;
-    var queue_id_CaseSensitive = req.body.queue_id;
+    var queueIdCaseSensitive = req.body.queue_id;
     //JSON validation
-    var queueIdValidator = validator.isValid(queue_id_CaseSensitive, validator.checkQueueId);
+    var queueIdValidator = validator.isValid(queueIdCaseSensitive, validator.checkQueueId);
     var customeridvalidator = validator.isValid(customer_id, validator.check10digit);
+    // Validation passed
     if (queueIdValidator && customeridvalidator) {
-        var queue_id = queue_id_CaseSensitive.toUpperCase();
+        var queue_id = queueIdCaseSensitive.toUpperCase();
         database.joinQueue(customer_id, queue_id, function (err, result) {
             if (!err) {
-                //Queue is active
+                // Queue is active
                 if (result !== false) {
-                    //Customer already in queue
+                    // Customer already in queue
                     if (result == 'EXIST') {
                         next({ body: { error: "Customer '" + customer_id + "' is already in Queue '" + queue_id + "'", code: 'ALREADY_IN_QUEUE' }, status: 404 });
-                    }
+                    }// Success
                     else if (result == 'SUCCESS') {
                         res.status(201).send();
-                    }
+                    }// Queue_id not found
                     else {
                         next({ body: { error: "Queue Id '" + queue_id + "' Not Found", code: 'UNKNOWN_QUEUE' }, status: 404 });
                     }
                 }
-                //Queue is inactive
+                // Queue is inactive
                 else if (result == false) {
                     next({ body: { error: "Queue Id '" + queue_id + "' is INACTIVE", code: 'INACTIVE_QUEUE' }, status: 422 });
                 }
-                //Unexpected server error
+                // Unexpected server error
                 else {
                     next({ body: { error: err.message, code: 'UNEXPECTED_ERROR' }, status: 555 });
                 }
             }
         });
     }
-    //Invalid customer id
+    // Invalid customer id
     else if (!customeridvalidator) {
         next({ body: errors.INVALID_BODY_CUSTOMER.body, status: errors.INVALID_BODY_CUSTOMER.status });
     }
-    //Invalid queue id
+    // Invalid queue id
     else if (!queueIdValidator) {
         next({ body: errors.INVALID_BODY_QUEUE.body, status: errors.INVALID_BODY_QUEUE.status });
     }
-    //Unexpected server error
+    // Unexpected server error
     else {
         next({ body: { error: err.message, code: 'UNEXPECTED_ERROR' }, status: 500 });
     }
@@ -298,19 +299,19 @@ app.get('/customer/queue', function (req, res, next) {
     var customer_id = req.query.customer_id;
     if (customer_id !== '') customer_id = parseInt(req.query.customer_id)
     else customer_id = undefined;
-    var queue_id_CaseSensitive = req.query.queue_id;
-    //JSON validation
-    var queueIdValidator = validator.isValid(queue_id_CaseSensitive, validator.checkQueueId);
+    var queueIdCaseSensitive = req.query.queue_id;
+    // JSON validation
+    var queueIdValidator = validator.isValid(queueIdCaseSensitive, validator.checkQueueId);
     var customeridvalidator = validator.isValid(customer_id, validator.check10digit);
     // If customer_id is not provided let validator pass through
     if (customer_id == undefined) customeridvalidator = true;
     // Validation passed
     if (queueIdValidator && customeridvalidator) {
-        var queue_id = queue_id_CaseSensitive.toUpperCase();
+        var queue_id = queueIdCaseSensitive.toUpperCase();
         database.checkQueue(queue_id, customer_id, function (err, result) {
             var output = { total: 0, ahead: -1, status: 'INACTIVE' }
             if (!err) {
-                //Queue active
+                // Queue active
                 console.log(result)
                 if (result.status == true) output.status = 'ACTIVE';
                 // Queue id not found/exist
@@ -318,10 +319,10 @@ app.get('/customer/queue', function (req, res, next) {
                     next({ body: { error: "Queue Id '" + queue_id + "' Not Found", code: 'UNKNOWN_QUEUE' }, status: 404 });
                 }
                 else {
-                    //Total queue number
+                    // Total queue number
                     output.total = result.total - result.current_queue_number;
                     result.current_queue_number = +1;
-                    //Missed queue
+                    // Missed queue
                     if (result.queue_number < result.current_queue_number) {
                         res.status(200).send(output);
                     }
@@ -350,11 +351,11 @@ app.get('/customer/queue', function (req, res, next) {
             }
         });
     }
-    //invalid customer id
+    // Invalid customer id
     else if (!customeridvalidator) {
         next({ body: errors.INVALID_QUERY_CUSTOMER.body, status: errors.INVALID_QUERY_CUSTOMER.status });
     }
-    //invalid queue id
+    // Invalid queue id
     else if (!queueIdValidator) {
         next({ body: errors.INVALID_QUERY_QUEUE.body, status: errors.INVALID_QUERY_QUEUE.status });
     }
