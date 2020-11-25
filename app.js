@@ -192,11 +192,10 @@ app.get('/company/arrival_rate', function (req, res, next) {
     var duration = parseInt(req.query.duration);
     //JSON validation
     var queueIdValidator = validator.isValid(queueIdCaseSensitive, validator.checkQueueId);
-    var timeValidator = validator.isValid(from, validator.checktime);
+    var timeValidator = moment(from).isValid();
     var durationvalidator = validator.isValid(duration, validator.checkduration);
     //If pass the JSON validation
     if (queueIdValidator&&timeValidator&&durationvalidator) {
-
         from = moment(from).subtract(8,'hours');
         from = moment(from).format('YYYY-M-D HH:mm:ss');
         duration = duration*60;

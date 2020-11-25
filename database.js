@@ -256,13 +256,12 @@ function closeDatabaseConnections() {
      * return a promise that resolves when all connection to the database is successfully closed, and rejects if there was any error.
      */
     console.log("Run Teardown")
-    pool.end().then(() => console.log('pool has ended')) //#how to know if this part is correct
+    pool.end().then(() => console.log('pool has ended')) 
 }
 
 module.exports = {
     resetTables,
     closeDatabaseConnections,
-    test,
     createQueue,
     updateQueue,
     serverAvailable,
