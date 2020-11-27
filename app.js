@@ -194,8 +194,7 @@ app.get('/company/arrival_rate', function (req, res, next) {
     var durationvalidator = validator.isValid(duration, validator.checkduration);
     // JSON validation passed
     if (queueIdValidator && timeValidator && durationvalidator) {
-        from = moment(from).subtract(8, 'hours');
-        from = moment(from).format('YYYY-M-D HH:mm:ss');
+        from = moment(from).format('YYYY-M-D HH:mm:ss')
         duration = duration * 60;
         var endtime = moment(from).add(duration, 'seconds');
         endtime = moment(endtime).format('YYYY-M-D HH:mm:ss');
@@ -214,7 +213,12 @@ app.get('/company/arrival_rate', function (req, res, next) {
                 }
                 // Success
                 else {
-                    res.status(200).send(result);
+                    const output = [];
+                    for (let i = 0;i < duration;i++){
+                        output[i] = {timestamp: moment(from).add(i,'seconds').format('YYYY-M-DTHH:mm:ss.000[Z]'),count: 0}
+                    }
+                    Object.assign(result,output);
+                    res.status(200).send(output);
                 }
             }
             // Unexpected error

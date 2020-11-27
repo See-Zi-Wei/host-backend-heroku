@@ -231,13 +231,14 @@ function arrivalRate(queue_id,from,duration, callback) {
             return callback(err, null);
         }
         else if (res.rows !=''){
-            const sql = 'SELECT time_joined as timestamp,count(*) FROM CustomerQueueNumber WHERE queue_id=$1 and time_joined BETWEEN $2 AND $3 GROUP BY time_joined';
-            pool.query(sql, [queue_id, from, duration], function (err, res) {
+            const sql = 'SELECT TO_TIMESTAMP(cast(time_joined as Text),$6) at time zone $4 at time zone $5 as timestamp,count(*) FROM CustomerQueueNumber WHERE queue_id=$1 and time_joined BETWEEN $2 AND $3 GROUP BY timestamp';
+            pool.query(sql, [queue_id, from, duration,'SGT','UTC','YYYY-MM-DD HH24:MI:SS'], function (err, res) {
                 if(err){
                     console.log(err);
                     return callback(err, null);
                 }
                 else if(res.rows !=''){
+                    console.log(res.rows);
                     return callback(null,res.rows);
                 }else{
                     //time range not found
