@@ -215,8 +215,8 @@ app.get('/company/arrival_rate', function (req, res, next) {
                 else {
                     const output = [];
                     for (let i = 0; i < duration; i++) {
-                        for(let a=0; a<result.length; a++){
-                                if(moment(from).add(i, 'seconds').add(8,'hours').format('YYYY-M-DTHH:mm:ss.000[Z]') == moment(result[a].timestamp).subtract(8,'hours').format('YYYY-M-DTHH:mm:ss.000[Z]')){
+                        for (let a = 0; a < result.length; a++) {
+                            if (moment(from).add(i, 'seconds').add(8, 'hours').format('YYYY-M-DTHH:mm:ss.000[Z]') == moment(result[a].timestamp).subtract(8, 'hours').format('YYYY-M-DTHH:mm:ss.000[Z]')) {
                                 output[i] = result[a];
                             }
                             else {
