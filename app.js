@@ -214,11 +214,19 @@ app.get('/company/arrival_rate', function (req, res, next) {
                 // Success
                 else {
                     const output = [];
-                    for (let i = 0;i < duration;i++){
-                        output[i] = {timestamp: moment(from).add(i,'seconds').format('YYYY-M-DTHH:mm:ss.000[Z]'),count: 0}
+                    for (let i = 0; i < duration; i++) {
+                        for(let a=0; a<result.length; a++){
+                                if(moment(from).add(i, 'seconds').add(8,'hours').format('YYYY-M-DTHH:mm:ss.000[Z]') == moment(result[a].timestamp).subtract(8,'hours').format('YYYY-M-DTHH:mm:ss.000[Z]')){
+                                output[i] = result[a];
+                            }
+                            else {
+                                output[i] = { timestamp: moment(from).add(i, 'seconds').format('YYYY-M-DTHH:mm:ss.000[Z]'), count: "0" };
+                            }
+                        }
                     }
-                    Object.assign(result,output);
+                    Object.assign(result, output);
                     res.status(200).send(output);
+                    //res.status(200).send(result);
                 }
             }
             // Unexpected error
@@ -251,7 +259,7 @@ app.get('/company/arrival_rate', function (req, res, next) {
 app.post('/customer/queue', function (req, res, next) {
     var customer_id = req.body.customer_id;
     var queueIdCaseSensitive = req.body.queue_id;
-    //JSON validation
+    // JSON validation
     var queueIdValidator = validator.isValid(queueIdCaseSensitive, validator.checkQueueId);
     var customeridvalidator = validator.isValid(customer_id, validator.check10digit);
     // Validation passed

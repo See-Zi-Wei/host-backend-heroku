@@ -133,14 +133,14 @@ function checkQueue(queue_id, customer_id, callback) {
                 return callback(null, 'NOEXIST');
             }
             else {
-                const r1 = res.rows[0];
+                const result1 = res.rows[0];
                 const sql = 'Select count(queue_number) total FROM CustomerQueueNumber WHERE queue_id=$1';
                 pool.query(sql, [queue_id], function (err, res) {
                     if (err) {
                         return callback(err, null);
                     } else {
-                        const r2 = res.rows[0];
-                        const result = Object.assign(r1, r2);
+                        const result2 = res.rows[0];
+                        const result = Object.assign(result1, result2);
                         if (customer_id == undefined) {
                             return callback(null, result);
                         }
@@ -150,8 +150,8 @@ function checkQueue(queue_id, customer_id, callback) {
                                 if (err) {
                                     return callback(err, null);
                                 } else {
-                                    const r3 = res.rows[0];
-                                    const result2 = Object.assign(result, r3);
+                                    const result3 = res.rows[0];
+                                    const result2 = Object.assign(result, result3);
                                     return callback(null, result2);
                                 }
                             });
@@ -222,7 +222,7 @@ function joinQueue(customer_id, queue_id, callback) {
     });
 }
 // For Arrival Rate API
-function arrivalRate(queue_id,from,duration, callback) {
+function arrivalRate(queue_id, from, duration, callback) {
     const pool = getDatabasePool();
     const sql = 'SELECT * FROM CustomerQueueNumber WHERE queue_id=$1';
     pool.query(sql, [queue_id], function (err, res) {
@@ -230,25 +230,25 @@ function arrivalRate(queue_id,from,duration, callback) {
             console.log(err);
             return callback(err, null);
         }
-        else if (res.rows !=''){
+        else if (res.rows != '') {
             const sql = 'SELECT TO_TIMESTAMP(cast(time_joined as Text),$6) at time zone $4 at time zone $5 as timestamp,count(*) FROM CustomerQueueNumber WHERE queue_id=$1 and time_joined BETWEEN $2 AND $3 GROUP BY timestamp';
-            pool.query(sql, [queue_id, from, duration,'SGT','UTC','YYYY-MM-DD HH24:MI:SS'], function (err, res) {
-                if(err){
+            pool.query(sql, [queue_id, from, duration, 'SGT', 'UTC', 'YYYY-MM-DD HH24:MI:SS'], function (err, res) {
+                if (err) {
                     console.log(err);
                     return callback(err, null);
                 }
-                else if(res.rows !=''){
+                else if (res.rows != '') {
                     console.log(res.rows);
-                    return callback(null,res.rows);
-                }else{
+                    return callback(null, res.rows);
+                } else {
                     //time range not found
-                    return callback(null,'TIMEERROR');
+                    return callback(null, 'TIMEERROR');
                 }
             })
         }
-        else{
+        else {
             //queue id not exist
-            return callback(null,'NOEXIST');
+            return callback(null, 'NOEXIST');
         }
     });
 }
