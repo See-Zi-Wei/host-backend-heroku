@@ -231,7 +231,7 @@ app.get('/company/arrival_rate', function (req, res, next) {
         next({ body: errors.INVALID_QUERY_QUEUE.body, status: errors.INVALID_QUERY_QUEUE.status });
     }// Validation failed - time validator 
     else if (!timeValidator) {
-        next({ body: { error: "Time format is incorrect", code: 'INVALID_QUERY_STRING' }, status: 400 });
+        next({ body: { error: "Date and Time format is incorrect", code: 'INVALID_QUERY_STRING' }, status: 400 });
     }// Duration validator
     else if (!durationvalidator) {
         next({ body: { error: "INVALID Duration", code: 'INVALID_QUERY_STRING' }, status: 400 });
