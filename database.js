@@ -3,10 +3,10 @@ const { Pool, Client } = require('pg');
 
 // Connect to ElephantSQL 
 const pool = new Pool({
-    user: 'achjwljb',
+    user: 'xmkrnqsb',
     host: 'john.db.elephantsql.com',
-    database: 'achjwljb',
-    password: 'cQtUDmjqP_i_1jz4IkJ3MnsXw5TrwOQR',
+    database: 'xmkrnqsb',
+    password: 'V4nVcVabJhJSAZhJDLetfSIOMzhq16SV',
     port: 5432,
     max: 4,
     statement_timeout: 10000
