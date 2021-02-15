@@ -96,8 +96,6 @@ app.post('/company/queue', function (req, res, next) {
 
 app.get('/company/queue', function (req, res, next) {
     var company_id = req.query.company_id;
-    var companyIdValid = validator.isValid(company_id, validator.check10digit);
-    if(companyIdValid){
     database.getQueue(company_id, function (err, result) {
         if (!err) {
             let output = [];
@@ -111,11 +109,10 @@ app.get('/company/queue', function (req, res, next) {
                 }
                 res.status(200).send(output);
             }
-            
+
         }
         else next({ body: { error: err.message, code: 'UNEXPECTED_ERROR' }, status: 500 });
     });
-}else console.log("Company id not valid");
 })
 
 /**
