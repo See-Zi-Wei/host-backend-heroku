@@ -93,6 +93,31 @@ app.post('/company/queue', function (req, res, next) {
     }
 })
 
+
+app.get('/company/queue', function (req, res, next) {
+    var company_id = req.query.company_id;
+    var companyIdValid = validator.isValid(company_id, validator.check10digit);
+    if(companyIdValid){
+    database.getQueue(company_id, function (err, result) {
+        if (!err) {
+            let output = [];
+            if (result == "") res.status(200).send(output);
+            
+            else {
+                for (let i = 0; i < result.length; i++) {
+                    var status = 0
+                    if (result[i].status == true) status = 1;
+                    output[i] = { queue_id: result[i].queue_id, is_active: status };
+                }
+                res.status(200).send(output);
+            }
+            
+        }
+        else next({ body: { error: err.message, code: 'UNEXPECTED_ERROR' }, status: 500 });
+    });
+}else console.log("Company id not valid");
+})
+
 /**
  * Company: Update Queue
  */

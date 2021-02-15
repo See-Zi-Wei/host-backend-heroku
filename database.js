@@ -63,6 +63,20 @@ function createQueue(company_id, queue_id, callback) {
         }
     });
 }
+
+function getQueue(company_id, callback) {
+    const pool = getDatabasePool();
+    const sql = 'Select * from queue where company_id = $1';
+    pool.query(sql, [company_id], function (err, res) {
+        if (err) {
+            return callback(err, null);
+        }
+        else {
+            return callback(null, res.rows);
+        }
+    });
+}
+
 // For Update Queue API
 function updateQueue(status, queue_id, callback) {
     const pool = getDatabasePool()
@@ -265,6 +279,7 @@ module.exports = {
     resetTables,
     closeDatabaseConnections,
     createQueue,
+    getQueue,
     updateQueue,
     serverAvailable,
     checkQueue,
